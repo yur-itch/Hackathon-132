@@ -4,6 +4,7 @@ import FavoritesPage from "./pages/FavoritesPage.jsx";
 import MyPlantsPage from "./pages/MyPlantsPage.jsx";
 import RecognizePage from "./pages/RecognizePage.jsx";
 import RemindersPage from "./pages/RemindersPage.jsx";
+import ExchangePage from "./pages/ExchangePage.jsx";
 import AuthPage from "./pages/AuthPage.jsx";
 import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
 import "./App.css";
@@ -14,6 +15,7 @@ const menuItems = [
   { to: "/reminders", label: "Напоминания" },
   { to: "/favorites", label: "Избранное" },
   { to: "/recognize", label: "Распознать" },
+  { to: "/exchange", label: "Обмен" },
 ];
 
 function getLinkClass({ isActive }) {
@@ -91,6 +93,7 @@ function AppShell() {
           <Route path="/reminders" element={<RemindersPage />} />
           <Route path="/favorites" element={<FavoritesPage />} />
           <Route path="/recognize" element={<RecognizePage />} />
+          <Route path="/exchange" element={<ExchangePage />} />
           <Route path="*" element={<Navigate to="/catalog" replace />} />
         </Routes>
       </main>
