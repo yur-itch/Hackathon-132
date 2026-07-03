@@ -26,6 +26,7 @@ import {
   getExchangeOffers,
   sendExchangeMessage,
 } from "./exchangeApi.js";
+import { getRecommendations } from "./recommendationsApi.js";
 
 const FAVORITES_KEY = "favoritePlantIds";
 
@@ -106,5 +107,9 @@ export const api = {
     getMessages: getExchangeMessages,
     listChats: getExchangeChats,
     confirm: confirmExchange,
+  },
+
+  recommendations: {
+    list: getRecommendations,
   },
 };
