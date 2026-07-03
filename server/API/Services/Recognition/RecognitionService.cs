@@ -90,7 +90,7 @@ public class RecognitionService : IRecognitionService
                     Status = MatchStatus.Matched,
                     RecognizedLatinName = r.Species.ScientificNameWithoutAuthor,
                     RecognizedCommonName = r.Species.CommonNames.FirstOrDefault(),
-                    TopScore = top.Score,
+                    TopScore = r.Score,
                     MatchedCard = card,
                     Candidates = candidates,
                     Message = $"Определено: {card.Name}."
