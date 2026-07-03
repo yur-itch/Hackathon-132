@@ -5,6 +5,9 @@ using PlantCare.Api.Services.Implementations;
 using PlantCare.Api.Services.Interfaces;
 using PlantCare.Api.Services.PlantNet;
 using PlantCare.Api.Services.Recognition;
+using PlantCare.Api.Services.Interfaces;
+using PlantCare.Api.Services.Implementations;
+using PlantCare.Api.Services.Background;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,12 +24,15 @@ builder.Services.AddControllers().AddJsonOptions(o =>
 });
 
 builder.Services.AddOpenApi();
+// Регистрация сервисов бизнес-логики Core / DataAccess
+builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IPlantsService, PlantsService>();
 builder.Services.AddScoped<IUserPlantsService, UserPlantsService>();
 builder.Services.AddScoped<IReminderService, ReminderService>();
-builder.Services.AddScoped<IRecommendationService, RecommendationService>();
 builder.Services.AddScoped<IExchangeService, ExchangeService>();
-builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IRecommendationService, RecommendationService>();
+builder.Services.AddScoped<IFavoritesService, FavoritesService>();
+builder.Services.AddHostedService<ReminderBackgroundService>();
 
 // Распознавание растений по фото (Pl@ntNet). Без ключа работает на фикстурах (мок).
 builder.Services.Configure<PlantNetOptions>(
@@ -34,6 +40,7 @@ builder.Services.Configure<PlantNetOptions>(
 builder.Services.AddHttpClient<IPlantNetClient, PlantNetClient>(c =>
     c.Timeout = TimeSpan.FromSeconds(10));
 builder.Services.AddScoped<IRecognitionService, RecognitionService>();
+builder.Services.AddScoped<IReminderService, ReminderService>();
 
 // CORS: открыто для дев-фронта (Vite на 5173). На проде сузить.
 const string DevCors = "dev";

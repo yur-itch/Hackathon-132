@@ -26,7 +26,7 @@ public sealed class UpdateUserPlantDto
 }
 
 public sealed record UserPlantDto(
-    int Id,
+    Guid Id,
     int PlantId,
     string PlantName,
     string? PlantImageUrl,
@@ -34,13 +34,3 @@ public sealed record UserPlantDto(
     DateTime? NextWateringDate,
     DateTime? NextRepottingDate);
 
-public enum CreateUserPlantResult
-{
-    Created,
-    PlantNotFound,
-    AlreadyExists
-}
-
-public sealed record AddUserPlantResult(
-    CreateUserPlantResult Result,
-    UserPlantDto? UserPlant);

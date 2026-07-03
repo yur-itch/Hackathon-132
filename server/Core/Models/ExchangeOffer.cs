@@ -7,7 +7,7 @@ namespace PlantCare.Api.Models;
 /// </summary>
 public class ExchangeOffer
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; } = Guid.NewGuid();
 
     // ID пользователя-владельца предложения (создателя объявления)
     public string OwnerId { get; set; } = "";
@@ -22,7 +22,7 @@ public class ExchangeOffer
     public string WantedPlantDescription { get; set; } = "";
 
     // Ссылка на конкретное растение из личной коллекции (может быть null, если растение не добавлено в систему)
-    public int? UserPlantId { get; set; }
+    public Guid? UserPlantId { get; set; }
     public UserPlant? UserPlant { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

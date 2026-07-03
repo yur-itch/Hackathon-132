@@ -31,7 +31,7 @@ public class ReminderService : IReminderService
 
     public async Task<Reminder?> CreateAsync(
         string ownerId, 
-        int userPlantId, 
+        Guid userPlantId, 
         ReminderType type, 
         int intervalDays, 
         DateTime? nextDueAt)
@@ -41,6 +41,7 @@ public class ReminderService : IReminderService
 
         var r = new Reminder
         {
+            Id = Guid.NewGuid(),
             UserPlantId = userPlantId,
             Type = type,
             IntervalDays = intervalDays,
@@ -55,7 +56,7 @@ public class ReminderService : IReminderService
 
     public async Task<bool> UpdateAsync(
         string ownerId, 
-        int id, 
+        Guid id, 
         int intervalDays, 
         bool enabled)
     {
@@ -72,7 +73,7 @@ public class ReminderService : IReminderService
         return true;
     }
 
-    public async Task<bool> MarkDoneAsync(int id, string ownerId)
+    public async Task<bool> MarkDoneAsync(Guid id, string ownerId)
     {
         var r = await _db.Reminders
             .Include(x => x.UserPlant)
@@ -87,7 +88,7 @@ public class ReminderService : IReminderService
         return true;
     }
 
-    public async Task<bool> DeleteAsync(int id, string ownerId)
+    public async Task<bool> DeleteAsync(Guid id, string ownerId)
     {
         var r = await _db.Reminders
             .Include(x => x.UserPlant)

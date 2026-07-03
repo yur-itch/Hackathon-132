@@ -19,10 +19,11 @@ public class ExchangeService : IExchangeService
         string title, 
         string description, 
         string wantedPlantDescription, 
-        int? userPlantId)
+        Guid? userPlantId)
     {
         var offer = new ExchangeOffer
         {
+            Id = Guid.NewGuid(),
             OwnerId = ownerId,
             Title = title,
             Description = description,
@@ -63,7 +64,7 @@ public class ExchangeService : IExchangeService
         return await q.OrderByDescending(o => o.CreatedAt).ToListAsync();
     }
 
-    public async Task<ExchangeOffer?> GetOfferByIdAsync(int id)
+    public async Task<ExchangeOffer?> GetOfferByIdAsync(Guid id)
     {
         return await _db.ExchangeOffers
             .Include(o => o.UserPlant)
@@ -71,7 +72,7 @@ public class ExchangeService : IExchangeService
             .FirstOrDefaultAsync(o => o.Id == id);
     }
 
-    public async Task<bool> CloseOfferAsync(int id, string ownerId)
+    public async Task<bool> CloseOfferAsync(Guid id, string ownerId)
     {
         var offer = await _db.ExchangeOffers.FirstOrDefaultAsync(o => o.Id == id && o.OwnerId == ownerId);
         if (offer == null) return false;
@@ -83,7 +84,7 @@ public class ExchangeService : IExchangeService
 
     public async Task<ChatMessage?> SendMessageAsync(
         string senderId, 
-        int exchangeOfferId, 
+        Guid exchangeOfferId, 
         string receiverId, 
         string text)
     {
@@ -92,6 +93,7 @@ public class ExchangeService : IExchangeService
 
         var message = new ChatMessage
         {
+            Id = Guid.NewGuid(),
             ExchangeOfferId = exchangeOfferId,
             SenderId = senderId,
             ReceiverId = receiverId,
@@ -106,7 +108,7 @@ public class ExchangeService : IExchangeService
     }
 
     public async Task<IEnumerable<ChatMessage>> GetChatMessagesAsync(
-        int exchangeOfferId, 
+        Guid exchangeOfferId, 
         string otherUserId, 
         string currentUserId)
     {

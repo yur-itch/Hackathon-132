@@ -45,6 +45,7 @@ public class UserPlantsService : IUserPlantsService
 
         var userPlant = new UserPlant
         {
+            Id = Guid.NewGuid(),
             OwnerId = ownerId,
             PlantId = plantId,
             Nickname = catalogPlant.Name,
@@ -58,6 +59,7 @@ public class UserPlantsService : IUserPlantsService
         int wateringInterval = catalogPlant.WateringFrequencyDays > 0 ? catalogPlant.WateringFrequencyDays : 7;
         var wateringReminder = new Reminder
         {
+            Id = Guid.NewGuid(),
             UserPlantId = userPlant.Id,
             Type = ReminderType.Watering,
             IntervalDays = wateringInterval,
@@ -71,6 +73,7 @@ public class UserPlantsService : IUserPlantsService
             int repottingIntervalDays = catalogPlant.RepottingFrequencyMonths.Value * 30;
             var repottingReminder = new Reminder
             {
+                Id = Guid.NewGuid(),
                 UserPlantId = userPlant.Id,
                 Type = ReminderType.Repotting,
                 IntervalDays = repottingIntervalDays,
@@ -83,6 +86,7 @@ public class UserPlantsService : IUserPlantsService
         {
             var repottingReminder = new Reminder
             {
+                Id = Guid.NewGuid(),
                 UserPlantId = userPlant.Id,
                 Type = ReminderType.Repotting,
                 IntervalDays = 365,
@@ -102,7 +106,7 @@ public class UserPlantsService : IUserPlantsService
 
     public async Task<UserPlant?> UpdateUserPlantAsync(
         string ownerId, 
-        int id, 
+        Guid id, 
         string? note, 
         DateTime? nextWateringDate, 
         DateTime? nextRepottingDate)
@@ -129,6 +133,7 @@ public class UserPlantsService : IUserPlantsService
                 int interval = userPlant.Plant?.WateringFrequencyDays ?? 7;
                 _db.Reminders.Add(new Reminder
                 {
+                    Id = Guid.NewGuid(),
                     UserPlantId = userPlant.Id,
                     Type = ReminderType.Watering,
                     IntervalDays = interval,
@@ -151,6 +156,7 @@ public class UserPlantsService : IUserPlantsService
                 int interval = (userPlant.Plant?.RepottingFrequencyMonths ?? 12) * 30;
                 _db.Reminders.Add(new Reminder
                 {
+                    Id = Guid.NewGuid(),
                     UserPlantId = userPlant.Id,
                     Type = ReminderType.Repotting,
                     IntervalDays = interval,
@@ -164,7 +170,7 @@ public class UserPlantsService : IUserPlantsService
         return userPlant;
     }
 
-    public async Task<bool> DeleteUserPlantAsync(string ownerId, int id)
+    public async Task<bool> DeleteUserPlantAsync(string ownerId, Guid id)
     {
         var userPlant = await _db.UserPlants
             .FirstOrDefaultAsync(up => up.Id == id && up.OwnerId == ownerId);
