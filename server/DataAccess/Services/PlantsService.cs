@@ -14,7 +14,7 @@ public class PlantsService : IPlantsService
         _db = db;
     }
 
-    public async Task<IReadOnlyCollection<Plant>> GetPlantsAsync(string? search, bool? isPoisonous)
+    public async Task<IReadOnlyCollection<Plant>> GetPlantsAsync(bool? isPoisonous)
     {
         var q = _db.Plants.AsNoTracking();
 
@@ -28,14 +28,6 @@ public class PlantsService : IPlantsService
             {
                 q = q.Where(p => p.Toxicity == null || p.Toxicity == "" || p.Toxicity.ToLower().Contains("non-toxic") || p.Toxicity.ToLower().Contains("not toxic"));
             }
-        }
-
-        if (!string.IsNullOrWhiteSpace(search))
-        {
-            var searchLower = search.Trim().ToLowerInvariant();
-            q = q.Where(p => p.Name.ToLower().Contains(searchLower) ||
-                             (p.LatinName != null && p.LatinName.ToLower().Contains(searchLower)) ||
-                             (p.Description != null && p.Description.ToLower().Contains(searchLower)));
         }
 
         return await q.ToListAsync();

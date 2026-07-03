@@ -17,10 +17,9 @@ public sealed class ExchangeController : ControllerBase
     }
 
     [HttpGet("offers")]
-    public async Task<ActionResult<IReadOnlyCollection<ExchangeOfferDto>>> GetOffers(
-        [FromQuery] string? search)
+    public async Task<ActionResult<IReadOnlyCollection<ExchangeOfferDto>>> GetOffers()
     {
-        var offers = await _exchangeService.GetActiveOffersAsync(search);
+        var offers = await _exchangeService.GetActiveOffersAsync();
         return Ok(offers.Select(ToDto).ToList());
     }
 

@@ -3,7 +3,6 @@ import { api } from "../api/client.js";
 import PlantCard from "../components/PlantCard.jsx";
 
 export default function CatalogPage() {
-  const [search, setSearch] = useState("");
   const [plants, setPlants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -14,11 +13,11 @@ export default function CatalogPage() {
     setError("");
 
     api.plants
-      .list(search)
+      .list()
       .then(setPlants)
       .catch(() => setError("Не удалось загрузить справочник"))
       .finally(() => setLoading(false));
-  }, [search]);
+  }, []);
 
   function toggleFavorite(plantId) {
     if (favoriteIds.includes(plantId)) {
@@ -34,15 +33,8 @@ export default function CatalogPage() {
     <section>
       <div className="page-title">
         <h1>Справочник растений</h1>
-        <p>Найдите растение и посмотрите основные рекомендации по уходу.</p>
+        <p>Посмотрите основные рекомендации по уходу за комнатными растениями.</p>
       </div>
-
-      <input
-        className="input search-input"
-        value={search}
-        onChange={(event) => setSearch(event.target.value)}
-        placeholder="Поиск по названию"
-      />
 
       {loading && <p className="muted">Загрузка…</p>}
       {error && <p className="error">{error}</p>}
@@ -69,7 +61,7 @@ export default function CatalogPage() {
       </div>
 
       {!loading && !error && plants.length === 0 && (
-        <p className="muted">Растения с таким названием не найдены.</p>
+        <p className="muted">В справочнике пока нет растений.</p>
       )}
     </section>
   );

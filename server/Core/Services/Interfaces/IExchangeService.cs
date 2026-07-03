@@ -15,9 +15,9 @@ public interface IExchangeService
         Guid? userPlantId);
 
     /// <summary>
-    /// Получить список всех активных предложений обмена (с возможностью текстового поиска).
+    /// Получить список всех активных предложений обмена.
     /// </summary>
-    Task<IEnumerable<ExchangeOffer>> GetActiveOffersAsync(string? search);
+    Task<IEnumerable<ExchangeOffer>> GetActiveOffersAsync();
 
     /// <summary>
     /// Получить подробную информацию об объявлении по его ID.

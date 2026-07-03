@@ -1,11 +1,7 @@
 import { apiRequest } from "./apiClient";
 
-export function getPlants(search = "") { // Если поиск не передали, то просто пустая строка пофик
-  const query = search
-    ? `?search=${encodeURIComponent(search)}`
-    : "";
-
-  return apiRequest(`/api/plants${query}`);
+export function getPlants() {
+  return apiRequest("/api/plants");
 }
 
 export function getPlantById(id) {

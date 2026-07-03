@@ -17,10 +17,9 @@ public sealed class PlantsController : ControllerBase
 
     [HttpGet]
     public async Task<ActionResult<IReadOnlyCollection<PlantListItemDto>>> GetPlants(
-        [FromQuery] string? search,
         [FromQuery] bool? isPoisonous)
     {
-        var plants = await _plantsService.GetPlantsAsync(search, isPoisonous);
+        var plants = await _plantsService.GetPlantsAsync(isPoisonous);
         return Ok(plants);
     }
 

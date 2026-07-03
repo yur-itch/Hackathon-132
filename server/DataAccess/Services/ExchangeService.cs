@@ -46,20 +46,12 @@ public class ExchangeService : IExchangeService
         return offer;
     }
 
-    public async Task<IEnumerable<ExchangeOffer>> GetActiveOffersAsync(string? search)
+    public async Task<IEnumerable<ExchangeOffer>> GetActiveOffersAsync()
     {
         var q = _db.ExchangeOffers
             .Include(o => o.UserPlant)
             .ThenInclude(up => up!.Plant)
             .Where(o => o.IsActive);
-
-        if (!string.IsNullOrWhiteSpace(search))
-        {
-            var searchLower = search.Trim().ToLowerInvariant();
-            q = q.Where(o => o.Title.ToLower().Contains(searchLower) ||
-                             o.Description.ToLower().Contains(searchLower) ||
-                             o.WantedPlantDescription.ToLower().Contains(searchLower));
-        }
 
         return await q.OrderByDescending(o => o.CreatedAt).ToListAsync();
     }

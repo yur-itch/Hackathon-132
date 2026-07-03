@@ -12,8 +12,6 @@ public static class SeedData
 {
     public static void EnsureSeeded(AppDbContext db)
     {
-        if (db.Plants.Any()) return;
-
         var filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "plants-seed.json");
         if (!File.Exists(filePath))
         {
@@ -29,9 +27,23 @@ public static class SeedData
                 var plants = JsonSerializer.Deserialize<List<Plant>>(json, options);
                 if (plants != null && plants.Count > 0)
                 {
-                    db.Plants.AddRange(plants);
+                    var existingPlantsByLatinName = db.Plants
+                        .Where(plant => plant.LatinName != null)
+                        .ToDictionary(plant => plant.LatinName!);
+
+                    foreach (var plant in plants)
+                    {
+                        if (existingPlantsByLatinName.TryGetValue(plant.LatinName ?? "", out var existingPlant))
+                        {
+                            existingPlant.ImageUrl = plant.ImageUrl;
+                            continue;
+                        }
+
+                        db.Plants.Add(plant);
+                    }
+
                     db.SaveChanges();
-                    Console.WriteLine($"Успешно импортировано {plants.Count} растений из {filePath}.");
+                    Console.WriteLine($"Справочник синхронизирован с {filePath}.");
                 }
                 else
                 {

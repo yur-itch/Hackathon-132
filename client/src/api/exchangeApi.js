@@ -1,11 +1,7 @@
 import { apiRequest } from "./apiClient";
 
-export function getExchangeOffers(search = "") {
-  const query = search
-    ? `?search=${encodeURIComponent(search)}`
-    : "";
-
-  return apiRequest(`/api/exchange/offers${query}`);
+export function getExchangeOffers() {
+  return apiRequest("/api/exchange/offers");
 }
 
 export function getExchangeOfferById(id) {
