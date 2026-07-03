@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Mvc;
 using PlantCare.Api.Dtos;
 using PlantCare.Api.Models;
 using PlantCare.Api.Services.Interfaces;
-using ServiceCreateUserPlantResult = PlantCare.Api.Services.Interfaces.CreateUserPlantResult;
 
 namespace PlantCare.Api.Controllers;
 
@@ -35,18 +34,18 @@ public sealed class UserPlantsController : ControllerBase
             dto.NextWateringDate,
             dto.NextRepottingDate);
 
-        if (result.Result == ServiceCreateUserPlantResult.Created)
+        if (result.Result == CreateUserPlantResult.Created)
         {
             var userPlantDto = ToDto(result.UserPlant!);
             return CreatedAtAction(nameof(GetUserPlants), new { id = userPlantDto.Id }, userPlantDto);
         }
 
-        if (result.Result == ServiceCreateUserPlantResult.PlantNotFound)
+        if (result.Result == CreateUserPlantResult.PlantNotFound)
         {
             return NotFound("Plant not found.");
         }
 
-        if (result.Result == ServiceCreateUserPlantResult.AlreadyExists)
+        if (result.Result == CreateUserPlantResult.AlreadyExists)
         {
             return Conflict("Plant is already added to the collection.");
         }
@@ -54,9 +53,9 @@ public sealed class UserPlantsController : ControllerBase
         return BadRequest();
     }
 
-    [HttpPut("{id:int}")]
+    [HttpPut("{id:guid}")]
     public async Task<ActionResult<UserPlantDto>> UpdateUserPlant(
-        int id,
+        Guid id,
         [FromBody] UpdateUserPlantDto dto)
     {
         var userPlant = await _userPlantsService.UpdateUserPlantAsync(
@@ -69,18 +68,26 @@ public sealed class UserPlantsController : ControllerBase
         return userPlant is null ? NotFound() : Ok(ToDto(userPlant));
     }
 
-    [HttpDelete("{id:int}")]
+    [HttpDelete("{id:guid}")]
     public async Task<IActionResult> DeleteUserPlant(
-        int id)
+        Guid id)
     {
         var deleted = await _userPlantsService.DeleteUserPlantAsync(GetOwnerId(), id);
         return deleted ? NoContent() : NotFound();
     }
 
+    private string GetOwnerId()
+        => Request.Headers.TryGetValue("X-User-Id", out var value) && !string.IsNullOrWhiteSpace(value)
+            ? value.ToString()
+            : "local";
+
     private static UserPlantDto ToDto(UserPlant userPlant)
     {
-        var wateringReminder = userPlant.Reminders.FirstOrDefault(item => item.Type == ReminderType.Watering);
-        var repottingReminder = userPlant.Reminders.FirstOrDefault(item => item.Type == ReminderType.Repotting);
+        var wateringReminder = userPlant.Reminders
+            .FirstOrDefault(reminder => reminder.Type == ReminderType.Watering && reminder.Enabled);
+
+        var repottingReminder = userPlant.Reminders
+            .FirstOrDefault(reminder => reminder.Type == ReminderType.Repotting && reminder.Enabled);
 
         return new UserPlantDto(
             userPlant.Id,
@@ -91,9 +98,4 @@ public sealed class UserPlantsController : ControllerBase
             wateringReminder?.NextDueAt,
             repottingReminder?.NextDueAt);
     }
-
-    private string GetOwnerId()
-        => Request.Headers.TryGetValue("X-User-Id", out var value) && !string.IsNullOrWhiteSpace(value)
-            ? value.ToString()
-            : "local";
 }

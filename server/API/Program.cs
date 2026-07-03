@@ -40,6 +40,7 @@ builder.Services.Configure<PlantNetOptions>(
 builder.Services.AddHttpClient<IPlantNetClient, PlantNetClient>(c =>
     c.Timeout = TimeSpan.FromSeconds(10));
 builder.Services.AddScoped<IRecognitionService, RecognitionService>();
+builder.Services.AddScoped<IReminderService, ReminderService>();
 
 // CORS: открыто для дев-фронта (Vite на 5173). На проде сузить.
 const string DevCors = "dev";

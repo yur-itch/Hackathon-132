@@ -3,7 +3,7 @@ using PlantCare.Api.Models;
 namespace PlantCare.Api.Dtos;
 
 public record CreateReminderDto(
-    int UserPlantId,
+    Guid UserPlantId,
     ReminderType Type,
     int IntervalDays,
     DateTime? NextDueAt);

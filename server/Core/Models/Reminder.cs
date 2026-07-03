@@ -4,9 +4,9 @@ namespace PlantCare.Api.Models;
 
 public enum ReminderType
 {
-    Watering,
-    Repotting,
-    Fertilizing
+    Watering, // полив
+    Repotting, // пересадка
+    Fertilizing // подкормка
 }
 
 /// <summary>
