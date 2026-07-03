@@ -1,24 +1,15 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { api } from "../api/client.js";
+import { demoPlants } from "../data/demoPlants.js";
 
 export default function FavoritesPage() {
-  const [plants, setPlants] = useState([]);
-  const [error, setError] = useState("");
+  const [favoriteIds, setFavoriteIds] = useState(api.favorites.ids());
 
-  function loadFavorites() {
-    api.favorites
-      .listMine()
-      .then(setPlants)
-      .catch(() => setError("Не удалось загрузить избранное"));
-  }
-
-  useEffect(() => {
-    loadFavorites();
-  }, []);
+  const favoritePlants = demoPlants.filter((plant) => favoriteIds.includes(plant.id));
 
   function removeFavorite(plantId) {
     api.favorites.remove(plantId);
-    loadFavorites();
+    setFavoriteIds(api.favorites.ids());
   }
 
   return (
@@ -28,23 +19,40 @@ export default function FavoritesPage() {
         <p>Растения, сохраненные в браузере для быстрого доступа.</p>
       </div>
 
-      {error && <p className="error">{error}</p>}
-
       <div className="card-grid">
-        {plants.map((plant) => (
+        {favoritePlants.map((plant) => (
           <article className="plant-card" key={plant.id}>
             <div className="plant-card-body">
               <h2>{plant.name}</h2>
-              {plant.description && <p className="muted">{plant.description}</p>}
+              <p className="muted">{plant.description}</p>
+
+              <div className="plant-facts">
+                <p>
+                  <strong>Полив:</strong> {plant.watering}
+                </p>
+                <p>
+                  <strong>Освещение:</strong> {plant.light}
+                </p>
+                <p>
+                  <strong>Пересадка:</strong> {plant.repotting}
+                </p>
+                <p>
+                  <strong>Ядовитость:</strong> {plant.toxicity}
+                </p>
+                <p>
+                  <strong>Сложность ухода:</strong> {plant.difficulty}
+                </p>
+              </div>
+
               <button className="button button-danger" onClick={() => removeFavorite(plant.id)}>
-                Удалить
+                Убрать из избранного
               </button>
             </div>
           </article>
         ))}
       </div>
 
-      {plants.length === 0 && !error && <p className="muted">В избранном пока пусто.</p>}
+      {favoritePlants.length === 0 && <p className="muted">В избранном пока пусто.</p>}
     </section>
   );
 }

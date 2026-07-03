@@ -1,31 +1,14 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { api } from "../api/client.js";
-
-function getWateringText(plant) {
-  return plant.wateringRecommendations || `раз в ${plant.wateringFrequencyDays} дней`;
-}
-
-function getLightText(plant) {
-  return plant.lightingRecommendations || plant.light || "не указано";
-}
+import { demoPlants } from "../data/demoPlants.js";
 
 export default function CatalogPage() {
-  const [plants, setPlants] = useState([]);
-  const [favoriteIds, setFavoriteIds] = useState(api.favorites.ids());
   const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [favoriteIds, setFavoriteIds] = useState(api.favorites.ids());
 
-  useEffect(() => {
-    setLoading(true);
-    setError("");
-
-    api.plants
-      .list({ search })
-      .then(setPlants)
-      .catch(() => setError("Не удалось загрузить растения"))
-      .finally(() => setLoading(false));
-  }, [search]);
+  const filteredPlants = demoPlants.filter((plant) =>
+    plant.name.toLowerCase().includes(search.trim().toLowerCase()),
+  );
 
   function toggleFavorite(plantId) {
     if (favoriteIds.includes(plantId)) {
@@ -41,40 +24,57 @@ export default function CatalogPage() {
     <section>
       <div className="page-title">
         <h1>Справочник растений</h1>
-        <p>Найдите растение и посмотрите базовые рекомендации по уходу.</p>
+        <p>Найдите растение и посмотрите основные рекомендации по уходу.</p>
       </div>
 
       <input
         className="input search-input"
         value={search}
         onChange={(event) => setSearch(event.target.value)}
-        placeholder="Поиск растения"
+        placeholder="Поиск по названию"
       />
 
-      {loading && <p className="muted">Загрузка...</p>}
-      {error && <p className="error">{error}</p>}
-
       <div className="card-grid">
-        {plants.map((plant) => (
-          <article className="plant-card" key={plant.id}>
-            {plant.imageUrl && (
-              <img className="plant-image" src={plant.imageUrl} alt={plant.name} />
-            )}
+        {filteredPlants.map((plant) => {
+          const isFavorite = favoriteIds.includes(plant.id);
 
-            <div className="plant-card-body">
-              <h2>{plant.name}</h2>
-              {plant.description && <p className="muted">{plant.description}</p>}
-              <p>Полив: {getWateringText(plant)}</p>
-              <p>Освещение: {getLightText(plant)}</p>
-              <p>{plant.isPoisonous ? "Ядовитое растение" : "Не отмечено как ядовитое"}</p>
+          return (
+            <article className="plant-card" key={plant.id}>
+              <div className="plant-card-body">
+                <h2>{plant.name}</h2>
+                <p className="muted">{plant.description}</p>
 
-              <button className="button button-secondary" onClick={() => toggleFavorite(plant.id)}>
-                {favoriteIds.includes(plant.id) ? "Убрать из избранного" : "В избранное"}
-              </button>
-            </div>
-          </article>
-        ))}
+                <div className="plant-facts">
+                  <p>
+                    <strong>Полив:</strong> {plant.watering}
+                  </p>
+                  <p>
+                    <strong>Освещение:</strong> {plant.light}
+                  </p>
+                  <p>
+                    <strong>Пересадка:</strong> {plant.repotting}
+                  </p>
+                  <p>
+                    <strong>Ядовитость:</strong> {plant.toxicity}
+                  </p>
+                  <p>
+                    <strong>Сложность ухода:</strong> {plant.difficulty}
+                  </p>
+                </div>
+
+                <button
+                  className={isFavorite ? "button button-secondary" : "button"}
+                  onClick={() => toggleFavorite(plant.id)}
+                >
+                  {isFavorite ? "В избранном" : "В избранное"}
+                </button>
+              </div>
+            </article>
+          );
+        })}
       </div>
+
+      {filteredPlants.length === 0 && <p className="muted">Растения с таким названием не найдены.</p>}
     </section>
   );
 }
