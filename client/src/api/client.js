@@ -16,6 +16,16 @@ import {
 import { identify } from "./recognitionApi.js";
 import { getMe, login, logout, register } from "./authApi.js";
 import { getVapidPublicKey, subscribe, unsubscribe } from "./pushApi.js";
+import {
+  closeExchangeOffer,
+  confirmExchange,
+  createExchangeOffer,
+  getExchangeChats,
+  getExchangeMessages,
+  getExchangeOfferById,
+  getExchangeOffers,
+  sendExchangeMessage,
+} from "./exchangeApi.js";
 
 const FAVORITES_KEY = "favoritePlantIds";
 
@@ -85,5 +95,16 @@ export const api = {
     vapidPublicKey: getVapidPublicKey,
     subscribe,
     unsubscribe,
+  },
+
+  exchange: {
+    listOffers: getExchangeOffers,
+    getOffer: getExchangeOfferById,
+    createOffer: createExchangeOffer,
+    closeOffer: closeExchangeOffer,
+    sendMessage: sendExchangeMessage,
+    getMessages: getExchangeMessages,
+    listChats: getExchangeChats,
+    confirm: confirmExchange,
   },
 };
