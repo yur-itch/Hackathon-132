@@ -8,13 +8,13 @@ PlantCare — помощник по уходу за растениями (хак
 
 ## Структура
 - `server/` — ASP.NET Core 10 Web API + EF Core (PostgreSQL) + Layered Structure (Services, Entities, Dtos, Data, Controllers). Порт **5071** (или в Docker).
-- `client/` — React + Vite + TS + Tailwind v4. Порт **5173**.
+- `client/` — React + Vite + JavaScript + CSS + React Router. Порт **5173**.
 
 ## Железные правила
 1. **Контракт API — единый источник правды.** Меняешь модель/DTO на бэке →
-   сразу правишь `client/src/api/types.ts`. Не расходитесь.
+   сразу правишь `client/src/api/client.js`. Не расходитесь.
 2. **Не лезь в чужие файлы.** Держись своей зоны (см. таблицу в README).
-   Общие точки (`Program.cs`, `App.tsx`, `AppDbContext.cs`) меняем аккуратно и предупреждаем команду.
+   Общие точки (`Program.cs`, `App.jsx`, `AppDbContext.cs`) меняем аккуратно и предупреждаем команду.
 3. **Мелкие частые коммиты, узкие ветки по фиче.** Четыре агента быстро создают конфликты.
 4. **Владелец коллекции — заголовок `X-User-Id`** (по умолчанию `"local"`).
    Не хардкодь пользователя, бери из этого механизма.
@@ -27,14 +27,14 @@ PlantCare — помощник по уходу за растениями (хак
 - База данных: PostgreSQL. Запуск проекта локально или через Docker (`docker-compose up -d --build`). При изменениях схемы БД создавайте миграции: `dotnet ef migrations add <Name>`.
 
 ## Фронтенд-стиль
-- Все запросы — через `client/src/api/client.ts` (`api.plants`, `api.userPlants`, ...).
+- Все запросы — через `client/src/api/client.js` (`api.plants`, `api.userPlants`, ...).
   Не пиши `fetch` напрямую в компонентах.
-- Стили — только Tailwind-классы. Никаких отдельных CSS-файлов на компонент.
-- Одна страница = один файл в `client/src/pages/`. Роуты — в `App.tsx`.
+- Стили — обычный CSS (`client/src/App.css`, `client/src/index.css`). Tailwind не используем.
+- Одна страница = один файл в `client/src/pages/`. Роуты — в `App.jsx`.
 
 ## Проверка перед коммитом
 - Бэк: `cd server && dotnet build` — 0 ошибок.
-- Фронт: `cd client && npm run build` — проходит tsc + vite.
+- Фронт: `cd client && npm run build` — проходит vite build.
 
 ## Чего НЕ делаем
 - Не пишем свой ML для распознавания фото — только внешний API.
