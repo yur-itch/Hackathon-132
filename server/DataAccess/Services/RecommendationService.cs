@@ -16,17 +16,24 @@ public class RecommendationService : IRecommendationService
 
     public async Task<IEnumerable<Plant>> GetRecommendationsAsync(string ownerId, int count = 3)
     {
-        // 1. Получаем ID растений, которые уже есть у пользователя
+        // Получаем ID растений, которые уже есть у пользователя, и дальше
+        // работаем так же, как для гостевой коллекции
         var userPlantIds = await _db.UserPlants
             .Where(up => up.OwnerId == ownerId && up.PlantId.HasValue)
             .Select(up => up.PlantId!.Value)
             .ToListAsync();
 
-        // 2. Получаем коллекцию растений пользователя, чтобы проанализировать предпочтения
-        var userPlants = await _db.UserPlants
-            .Include(up => up.Plant)
-            .Where(up => up.OwnerId == ownerId && up.Plant != null)
-            .Select(up => up.Plant!)
+        return await GetRecommendationsForCollectionAsync(userPlantIds, count);
+    }
+
+    public async Task<IEnumerable<Plant>> GetRecommendationsForCollectionAsync(
+        IReadOnlyCollection<int> plantIds, int count = 3)
+    {
+        var userPlantIds = plantIds.ToList();
+
+        // 2. Получаем растения коллекции из справочника, чтобы проанализировать предпочтения
+        var userPlants = await _db.Plants
+            .Where(p => userPlantIds.Contains(p.Id))
             .ToListAsync();
 
         // 3. Если коллекция пуста, рекомендуем самые легкие растения из каталога, которых нет в коллекции

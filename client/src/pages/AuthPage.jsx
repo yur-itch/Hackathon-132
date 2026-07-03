@@ -65,6 +65,11 @@ export default function AuthPage() {
         <p>
           {mode === "login" ? "Войдите, чтобы синхронизировать коллекцию между устройствами." : "Создайте аккаунт для своей коллекции."}
         </p>
+        <p className="muted">
+          Без аккаунта тоже можно: коллекция и избранное сохранятся в этом браузере,
+          а после входа автоматически перенесутся в аккаунт. Аккаунт нужен для обмена
+          растениями, push-уведомлений и синхронизации между устройствами.
+        </p>
       </div>
 
       <form className="form-panel narrow" onSubmit={submit}>
@@ -112,6 +117,14 @@ export default function AuthPage() {
           }}
         >
           {mode === "login" ? "Нет аккаунта? Зарегистрироваться" : "Уже есть аккаунт? Войти"}
+        </button>
+
+        <button
+          className="button button-secondary"
+          type="button"
+          onClick={() => navigate("/catalog")}
+        >
+          Продолжить без аккаунта
         </button>
       </form>
 

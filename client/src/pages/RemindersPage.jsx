@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/client.js";
+import { useAuth } from "../context/AuthContext.jsx";
 import {
   disablePushNotifications,
   enablePushNotifications,
@@ -86,6 +87,7 @@ function PushToggle() {
 }
 
 export default function RemindersPage() {
+  const { user } = useAuth();
   const [reminders, setReminders] = useState([]);
   const [error, setError] = useState("");
   const [doneId, setDoneId] = useState(null);
@@ -120,7 +122,11 @@ export default function RemindersPage() {
         <p>Задачи строятся по датам, указанным в личном списке растений.</p>
       </div>
 
-      <PushToggle />
+      {user ? (
+        <PushToggle />
+      ) : (
+        <p className="muted">Push-уведомления доступны после входа в аккаунт.</p>
+      )}
 
       {error && <p className="error">{error}</p>}
 

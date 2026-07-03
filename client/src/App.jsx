@@ -9,14 +9,17 @@ import AuthPage from "./pages/AuthPage.jsx";
 import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
 import "./App.css";
 
+// Доступно и гостю (данные — в localStorage браузера)
 const menuItems = [
   { to: "/catalog", label: "Справочник" },
   { to: "/my-plants", label: "Мои растения" },
   { to: "/reminders", label: "Напоминания" },
   { to: "/favorites", label: "Избранное" },
   { to: "/recognize", label: "Распознать" },
-  { to: "/exchange", label: "Обмен" },
 ];
+
+// Обмен требует аккаунт: нужна личность для объявлений и чата
+const authOnlyMenuItems = [{ to: "/exchange", label: "Обмен" }];
 
 function getLinkClass({ isActive }) {
   return isActive ? "nav-link nav-link-active" : "nav-link";
@@ -46,21 +49,7 @@ function AppShell() {
     );
   }
 
-  if (!user) {
-    return (
-      <div className="app">
-        <header className="header">
-          <div className="header-inner">
-            <Brand />
-          </div>
-        </header>
-
-        <main className="main">
-          <AuthPage />
-        </main>
-      </div>
-    );
-  }
+  const items = user ? [...menuItems, ...authOnlyMenuItems] : menuItems;
 
   return (
     <div className="app">
@@ -69,7 +58,7 @@ function AppShell() {
           <Brand />
 
           <nav className="nav">
-            {menuItems.map((item) => (
+            {items.map((item) => (
               <NavLink key={item.to} to={item.to} className={getLinkClass}>
                 {item.label}
               </NavLink>
@@ -77,10 +66,18 @@ function AppShell() {
           </nav>
 
           <div className="account-controls">
-            <span className="muted">{user.displayName}</span>
-            <button className="button button-secondary" onClick={logout}>
-              Выйти
-            </button>
+            {user ? (
+              <>
+                <span className="muted">{user.displayName}</span>
+                <button className="button button-secondary" onClick={logout}>
+                  Выйти
+                </button>
+              </>
+            ) : (
+              <NavLink to="/auth" className="button">
+                Войти
+              </NavLink>
+            )}
           </div>
         </div>
       </header>
@@ -93,7 +90,14 @@ function AppShell() {
           <Route path="/reminders" element={<RemindersPage />} />
           <Route path="/favorites" element={<FavoritesPage />} />
           <Route path="/recognize" element={<RecognizePage />} />
-          <Route path="/exchange" element={<ExchangePage />} />
+          <Route
+            path="/auth"
+            element={user ? <Navigate to="/catalog" replace /> : <AuthPage />}
+          />
+          <Route
+            path="/exchange"
+            element={user ? <ExchangePage /> : <Navigate to="/auth" replace />}
+          />
           <Route path="*" element={<Navigate to="/catalog" replace />} />
         </Routes>
       </main>

@@ -36,12 +36,21 @@ export default function MyPlantsPage() {
 
     setError("");
 
-    await api.userPlants.create({
-      plantId: Number(form.plantId),
-      note: form.note || null,
-      nextWateringDate: form.nextWateringDate || null,
-      nextRepottingDate: form.nextRepottingDate || null,
-    });
+    try {
+      await api.userPlants.create({
+        plantId: Number(form.plantId),
+        note: form.note || null,
+        nextWateringDate: form.nextWateringDate || null,
+        nextRepottingDate: form.nextRepottingDate || null,
+      });
+    } catch (requestError) {
+      setError(
+        (requestError.message || "").includes("already")
+          ? "Это растение уже есть в вашем списке"
+          : "Не удалось добавить растение",
+      );
+      return;
+    }
 
     setForm({
       plantId: "",
