@@ -20,8 +20,12 @@ export default function FavoritesPage() {
 
   useEffect(loadFavorites, []);
 
-  function removeFavorite(plantId) {
-    api.favorites.remove(plantId);
+  async function removeFavorite(plantId) {
+    try {
+      await api.favorites.remove(plantId);
+    } catch {
+      setError("Не удалось убрать растение из избранного");
+    }
     loadFavorites();
   }
 
@@ -29,7 +33,7 @@ export default function FavoritesPage() {
     <section>
       <div className="page-title">
         <h1>Избранное</h1>
-        <p>Растения, сохраненные в браузере для быстрого доступа.</p>
+        <p>Растения, сохранённые для быстрого доступа.</p>
       </div>
 
       {loading && <p className="muted">Загрузка…</p>}

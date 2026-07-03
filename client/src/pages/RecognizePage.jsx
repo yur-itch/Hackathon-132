@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "../api/client.js";
 import PlantCard from "../components/PlantCard.jsx";
 
@@ -19,9 +19,13 @@ export default function RecognizePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
-  const [favoriteIds, setFavoriteIds] = useState(api.favorites.ids());
+  const [favoriteIds, setFavoriteIds] = useState([]);
   const [addStatus, setAddStatus] = useState("idle"); // idle | saving | added
   const [addError, setAddError] = useState("");
+
+  useEffect(() => {
+    api.favorites.ids().then(setFavoriteIds).catch(() => {});
+  }, []);
 
   function handleFileChange(selectedFile) {
     setFile(selectedFile);
@@ -52,14 +56,22 @@ export default function RecognizePage() {
     }
   }
 
-  function toggleFavorite(plantId) {
-    if (favoriteIds.includes(plantId)) {
-      api.favorites.remove(plantId);
-    } else {
-      api.favorites.add(plantId);
-    }
+  async function toggleFavorite(plantId) {
+    const isFavorite = favoriteIds.includes(plantId);
 
-    setFavoriteIds(api.favorites.ids());
+    setFavoriteIds((current) =>
+      isFavorite ? current.filter((id) => id !== plantId) : [...current, plantId],
+    );
+
+    try {
+      if (isFavorite) {
+        await api.favorites.remove(plantId);
+      } else {
+        await api.favorites.add(plantId);
+      }
+    } catch {
+      api.favorites.ids().then(setFavoriteIds).catch(() => {});
+    }
   }
 
   async function addToMyPlants(plantId) {

@@ -6,7 +6,7 @@ export default function CatalogPage() {
   const [plants, setPlants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [favoriteIds, setFavoriteIds] = useState(api.favorites.ids());
+  const [favoriteIds, setFavoriteIds] = useState([]);
 
   useEffect(() => {
     setLoading(true);
@@ -17,16 +17,27 @@ export default function CatalogPage() {
       .then(setPlants)
       .catch(() => setError("Не удалось загрузить справочник"))
       .finally(() => setLoading(false));
+
+    api.favorites.ids().then(setFavoriteIds).catch(() => {});
   }, []);
 
-  function toggleFavorite(plantId) {
-    if (favoriteIds.includes(plantId)) {
-      api.favorites.remove(plantId);
-    } else {
-      api.favorites.add(plantId);
-    }
+  async function toggleFavorite(plantId) {
+    const isFavorite = favoriteIds.includes(plantId);
 
-    setFavoriteIds(api.favorites.ids());
+    // Оптимистично меняем кнопку, при ошибке перечитываем состояние с бэка
+    setFavoriteIds((current) =>
+      isFavorite ? current.filter((id) => id !== plantId) : [...current, plantId],
+    );
+
+    try {
+      if (isFavorite) {
+        await api.favorites.remove(plantId);
+      } else {
+        await api.favorites.add(plantId);
+      }
+    } catch {
+      api.favorites.ids().then(setFavoriteIds).catch(() => {});
+    }
   }
 
   return (
