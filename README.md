@@ -67,11 +67,19 @@ npm run dev
 `apiClient.js` (`apiRequest`) — там же разбор `ValidationProblemDetails` в читаемое сообщение.
 Компоненты не дёргают `fetch`/`apiRequest`/типизированные модули напрямую — только `client.js`.
 
-**Авторизация обязательна для всего приложения.** `AppShell` (`App.jsx`) сам решает, что
-показать: пока не залогинены — только `AuthPage`, меню и роуты не рендерятся вообще. На
-бэке владелец коллекции берётся строго из JWT-claim (`OwnerIdExtensions.GetOwnerId`) —
-анонимного режима через `X-User-Id` больше нет, эндпоинт без валидной куки `access_token`
-вернёт 401. JWT-кука ставится `AuthController` при логине/регистрации.
+**Два режима работы.** Без аккаунта (базовый сценарий из ТЗ) доступны справочник,
+«Мои растения», напоминания, избранное и распознавание — данные гостя живут в localStorage
+браузера (`client/src/api/guestStore.js`), фасад `client.js` переключает хранилище по
+auth-состоянию (`setGuestMode`), страницы разницы не видят. Рекомендации гостю считает
+бэкенд по `?plantIds=` из его локальной коллекции. После входа/регистрации гостевые данные
+автоматически импортируются в аккаунт (`api.guest.importToAccount`).
+
+**За логином** остаются обмен растениями (нужна личность для объявлений и чата),
+push-уведомления и синхронизация между устройствами. На бэке владелец коллекции берётся
+строго из JWT-claim (`OwnerIdExtensions.GetOwnerId`) — заголовка `X-User-Id` больше нет,
+пользовательский эндпоинт без валидной куки `access_token` вернёт 401. JWT-кука ставится
+`AuthController` при логине/регистрации. Анонимно доступны только `/api/plants`,
+`/api/recognition/identify` и `/api/recommendations` (с `plantIds`).
 
 ### Актуальные эндпоинты
 
@@ -84,13 +92,11 @@ npm run dev
 | GET/POST/PUT/DELETE | `/api/user-plants` | личная коллекция (напоминания — поля `nextWateringDate`/`nextRepottingDate`, id связанных `Reminder` — на самой записи) |
 | GET/POST/PUT/DELETE | `/api/reminders` | напоминания напрямую (фронт сейчас работает через `user-plants`, этим эндпоинтом не пользуется) |
 | POST | `/api/reminders/{id}/done` | отметить выполненным (сдвигает срок) |
-| GET/POST/DELETE | `/api/favorites` | избранное (хранится на бэке, не в localStorage) |
+| GET/POST/DELETE | `/api/favorites` | избранное залогиненного (гость — в localStorage) |
+| GET | `/api/recommendations?count=&plantIds=` | рекомендации: по коллекции из БД (JWT) или по `plantIds` (гость) |
 | GET/POST/DELETE | `/api/exchange/offers`, `/messages`, `/chats`; POST `/confirm` | обмен растениями + чат по сделке |
 | GET/POST | `/api/push/vapid-public-key`, `/subscribe`, `/unsubscribe` | Web Push подписки |
 | POST | `/api/recognition/identify` | распознавание по фото (см. ниже) |
-
-**Рекомендации** (`IRecommendationService`) реализованы и подключены через DI, но HTTP-контроллера
-пока нет — в работе.
 
 ## Распределение по людям (4)
 
@@ -166,13 +172,13 @@ npm run dev
 ## Дорожная карта усложнений (потолок коэф. 1.5)
 
 1. ✅ Сервер + синхронизация (Postgres + Docker; коллекция, справочник и избранное — на бэке)
-2. ✅ Авторизация — `AuthController`, JWT в cookie `access_token`, обязательна для всего
-   приложения (анонимного режима больше нет)
+2. ✅ Авторизация — `AuthController`, JWT в cookie `access_token`; базовые вкладки работают
+   и без аккаунта (гостевой режим на localStorage, см. «Два режима работы»)
 3. ✅ Распознавание по фото — Pl@ntNet (см. раздел выше), без своего ML
 4. ✅ Push-уведомления о напоминаниях — Web Push/VAPID (см. раздел выше)
-5. 🔶 Рекомендации — `RecommendationService` реализован и в DI, `RecommendationController`
-   в работе
-6. 🔶 Обмен растениями + чат — `ExchangeController` и `ExchangePage.jsx` (с чатом) готовы,
-   но роут `/exchange` пока не зарегистрирован в `App.jsx` — страница недостижима из UI
+5. ✅ Рекомендации — `RecommendationsController` + секция «Вам может подойти» в справочнике,
+   работает и для гостя (по `plantIds` из localStorage-коллекции)
+6. ✅ Обмен растениями + чат — `ExchangeController` + `ExchangePage.jsx` (роут `/exchange`,
+   только для залогиненных)
 
 Легенда: ✅ доступно через API и фронт · 🔶 почти готово, есть конкретный незакрытый хвост · ☐ не начато.
