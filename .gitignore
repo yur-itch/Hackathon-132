@@ -1,0 +1,19 @@
+# --- .NET ---
+bin/
+obj/
+*.user
+*.db
+*.db-shm
+*.db-wal
+
+# --- Node ---
+node_modules/
+dist/
+.vite/
+
+# --- env / IDE ---
+.env.local
+.vs/
+.idea/
+.vscode/
+*.log
