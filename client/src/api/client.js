@@ -15,6 +15,16 @@ import {
 } from "./userPlantsApi.js";
 import { identify } from "./recognitionApi.js";
 import { getMe, login, logout, register } from "./authApi.js";
+import {
+  closeExchangeOffer,
+  confirmExchange,
+  createExchangeOffer,
+  getExchangeChats,
+  getExchangeMessages,
+  getExchangeOfferById,
+  getExchangeOffers,
+  sendExchangeMessage,
+} from "./exchangeApi.js";
 
 const FAVORITES_KEY = "favoritePlantIds";
 
@@ -78,5 +88,16 @@ export const api = {
     login,
     logout,
     me: getMe,
+  },
+
+  exchange: {
+    listOffers: getExchangeOffers,
+    getOffer: getExchangeOfferById,
+    createOffer: createExchangeOffer,
+    closeOffer: closeExchangeOffer,
+    sendMessage: sendExchangeMessage,
+    getMessages: getExchangeMessages,
+    listChats: getExchangeChats,
+    confirm: confirmExchange,
   },
 };
