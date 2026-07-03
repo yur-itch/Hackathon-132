@@ -3,6 +3,8 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using PlantCare.Api.Data;
+using PlantCare.Api.Models;
+using PlantCare.Api.Services.Interfaces;
 
 namespace PlantCare.Api.Services.Background;
 
@@ -41,24 +43,37 @@ public class ReminderBackgroundService : BackgroundService
 
     private async Task CheckDueRemindersAsync(CancellationToken stoppingToken)
     {
-        using (var scope = _services.CreateScope())
+        using var scope = _services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var push = scope.ServiceProvider.GetRequiredService<IPushService>();
+
+        var now = DateTime.UtcNow;
+        var dueReminders = await db.Reminders
+            .Include(r => r.UserPlant)
+            .Where(r => r.Enabled && r.NextDueAt <= now)
+            .ToListAsync(stoppingToken);
+
+        if (dueReminders.Count == 0) return;
+
+        _logger.LogInformation("Found {Count} due reminders for care operations.", dueReminders.Count);
+
+        foreach (var r in dueReminders)
         {
-            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-            var now = DateTime.UtcNow;
-            var dueReminders = await db.Reminders
-                .Include(r => r.UserPlant)
-                .Where(r => r.Enabled && r.NextDueAt <= now)
-                .ToListAsync(stoppingToken);
-
-            if (dueReminders.Any())
+            var plantName = r.UserPlant?.Nickname ?? "растение";
+            var (title, body) = r.Type switch
             {
-                _logger.LogInformation("Found {Count} due reminders for care operations.", dueReminders.Count);
-                foreach (var r in dueReminders)
-                {
-                    _logger.LogInformation("Reminder: Plant ID {PlantId} ('{Nickname}') requires {Type} (due: {DueAt})",
-                        r.UserPlantId, r.UserPlant?.Nickname ?? "Unknown", r.Type, r.NextDueAt);
-                }
+                ReminderType.Watering => ("Пора полить", $"«{plantName}» пора полить."),
+                ReminderType.Repotting => ("Пора пересадить", $"«{plantName}» пора пересадить."),
+                ReminderType.Fertilizing => ("Пора подкормить", $"«{plantName}» пора подкормить."),
+                _ => ("Напоминание PlantCare", $"Требуется уход за «{plantName}».")
+            };
+
+            _logger.LogInformation("Reminder: Plant ID {PlantId} ('{Nickname}') requires {Type} (due: {DueAt})",
+                r.UserPlantId, plantName, r.Type, r.NextDueAt);
+
+            if (r.UserPlant is not null)
+            {
+                await push.NotifyOwnerAsync(r.UserPlant.OwnerId, title, body, stoppingToken);
             }
         }
     }

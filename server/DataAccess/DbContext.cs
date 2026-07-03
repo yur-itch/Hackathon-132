@@ -14,6 +14,7 @@ public class AppDbContext : DbContext
     public DbSet<User> Users => Set<User>();
     public DbSet<ExchangeOffer> ExchangeOffers => Set<ExchangeOffer>();
     public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
+    public DbSet<PushSubscription> PushSubscriptions => Set<PushSubscription>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -22,6 +23,8 @@ public class AppDbContext : DbContext
         b.Entity<User>().HasIndex(x => x.Email).IsUnique();
         b.Entity<ExchangeOffer>().HasIndex(x => x.OwnerId);
         b.Entity<ChatMessage>().HasIndex(x => x.ExchangeOfferId);
+        b.Entity<PushSubscription>().HasIndex(x => x.OwnerId);
+        b.Entity<PushSubscription>().HasIndex(x => x.Endpoint).IsUnique();
 
         b.Entity<Reminder>()
             .HasOne(r => r.UserPlant)

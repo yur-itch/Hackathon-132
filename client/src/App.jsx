@@ -20,40 +20,51 @@ function getLinkClass({ isActive }) {
   return isActive ? "nav-link nav-link-active" : "nav-link";
 }
 
-function AccountControls() {
-  const { user, loading, logout } = useAuth();
-
-  if (loading) {
-    return null;
-  }
-
-  if (!user) {
-    return (
-      <NavLink to="/auth" className={getLinkClass}>
-        Войти
-      </NavLink>
-    );
-  }
-
+function Brand() {
   return (
-    <div className="account-controls">
-      <span className="muted">{user.displayName}</span>
-      <button className="button button-secondary" onClick={logout}>
-        Выйти
-      </button>
+    <div>
+      <p className="brand">PlantCare</p>
+      <p className="subtitle">Помощник по уходу за растениями</p>
     </div>
   );
 }
 
 function AppShell() {
+  const { user, loading, logout } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="app">
+        <header className="header">
+          <div className="header-inner">
+            <Brand />
+          </div>
+        </header>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="app">
+        <header className="header">
+          <div className="header-inner">
+            <Brand />
+          </div>
+        </header>
+
+        <main className="main">
+          <AuthPage />
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="app">
       <header className="header">
         <div className="header-inner">
-          <div>
-            <p className="brand">PlantCare</p>
-            <p className="subtitle">Помощник по уходу за растениями</p>
-          </div>
+          <Brand />
 
           <nav className="nav">
             {menuItems.map((item) => (
@@ -63,7 +74,12 @@ function AppShell() {
             ))}
           </nav>
 
-          <AccountControls />
+          <div className="account-controls">
+            <span className="muted">{user.displayName}</span>
+            <button className="button button-secondary" onClick={logout}>
+              Выйти
+            </button>
+          </div>
         </div>
       </header>
 
@@ -75,7 +91,7 @@ function AppShell() {
           <Route path="/reminders" element={<RemindersPage />} />
           <Route path="/favorites" element={<FavoritesPage />} />
           <Route path="/recognize" element={<RecognizePage />} />
-          <Route path="/auth" element={<AuthPage />} />
+          <Route path="*" element={<Navigate to="/catalog" replace />} />
         </Routes>
       </main>
     </div>

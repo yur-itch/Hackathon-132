@@ -15,6 +15,7 @@ import {
 } from "./userPlantsApi.js";
 import { identify } from "./recognitionApi.js";
 import { getMe, login, logout, register } from "./authApi.js";
+import { getVapidPublicKey, subscribe, unsubscribe } from "./pushApi.js";
 
 const FAVORITES_KEY = "favoritePlantIds";
 
@@ -78,5 +79,11 @@ export const api = {
     login,
     logout,
     me: getMe,
+  },
+
+  push: {
+    vapidPublicKey: getVapidPublicKey,
+    subscribe,
+    unsubscribe,
   },
 };

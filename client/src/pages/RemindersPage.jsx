@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/client.js";
+import {
+  disablePushNotifications,
+  enablePushNotifications,
+  getSubscriptionState,
+  isPushSupported,
+} from "../pushNotifications.js";
 
 function buildReminders(plants) {
   return plants.flatMap((plant) => {
@@ -27,6 +33,56 @@ function buildReminders(plants) {
   });
 }
 
+function PushToggle() {
+  const [supported, setSupported] = useState(true);
+  const [subscribed, setSubscribed] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    getSubscriptionState().then((state) => {
+      setSupported(state.supported);
+      setSubscribed(state.subscribed);
+    });
+  }, []);
+
+  async function toggle() {
+    setLoading(true);
+    setError("");
+
+    try {
+      if (subscribed) {
+        await disablePushNotifications();
+        setSubscribed(false);
+      } else {
+        await enablePushNotifications();
+        setSubscribed(true);
+      }
+    } catch (toggleError) {
+      setError(toggleError.message || "Не удалось изменить настройку уведомлений");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (!isPushSupported() || !supported) {
+    return null;
+  }
+
+  return (
+    <div className="form-panel narrow">
+      <button className={subscribed ? "button button-secondary" : "button"} onClick={toggle} disabled={loading}>
+        {loading
+          ? "Подождите…"
+          : subscribed
+            ? "Уведомления включены — выключить"
+            : "Включить push-уведомления"}
+      </button>
+      {error && <p className="error">{error}</p>}
+    </div>
+  );
+}
+
 export default function RemindersPage() {
   const [reminders, setReminders] = useState([]);
   const [error, setError] = useState("");
@@ -44,6 +100,8 @@ export default function RemindersPage() {
         <h1>Напоминания</h1>
         <p>Задачи строятся по датам, указанным в личном списке растений.</p>
       </div>
+
+      <PushToggle />
 
       {error && <p className="error">{error}</p>}
 
