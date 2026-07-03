@@ -3,8 +3,8 @@
 }
 
 .header {
-  border-bottom: 1px solid #d8e2d1;
-  background: #ffffff;
+  background: linear-gradient(135deg, #1c5637 0%, #2f7d4f 100%);
+  box-shadow: 0 2px 12px rgba(31, 95, 59, 0.25);
 }
 
 .header-inner {
@@ -19,14 +19,15 @@
 
 .brand {
   margin: 0;
-  color: #1f5f3b;
+  color: #ffffff;
   font-size: 24px;
   font-weight: 700;
+  letter-spacing: 0.2px;
 }
 
 .subtitle {
   margin: 4px 0 0;
-  color: #647067;
+  color: rgba(255, 255, 255, 0.75);
   font-size: 14px;
 }
 
@@ -39,14 +40,20 @@
 .nav-link {
   border-radius: 6px;
   padding: 8px 12px;
-  color: #475148;
+  color: rgba(255, 255, 255, 0.85);
   font-size: 15px;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .nav-link:hover,
 .nav-link-active {
-  background: #e3f2df;
-  color: #1f5f3b;
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+}
+
+.nav-link:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
 }
 
 .account-controls {
@@ -56,9 +63,30 @@
   white-space: nowrap;
 }
 
+.account-controls .muted {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Кнопки в тёмной шапке — белые, чтобы не сливаться с фоном */
+.account-controls .button {
+  padding: 6px 12px;
+  background: #ffffff;
+  color: #1f5f3b;
+}
+
+.account-controls .button:hover {
+  background: #e3f2df;
+}
+
 .account-controls .button-secondary {
   margin-top: 0;
   padding: 6px 12px;
+  background: #ffffff;
+  color: #1f5f3b;
+}
+
+.account-controls .button-secondary:hover {
+  background: #e3f2df;
 }
 
 .main {
@@ -88,6 +116,13 @@
   padding: 10px 12px;
   background: #ffffff;
   color: #1f2933;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.input:focus {
+  border-color: #2f7d4f;
+  box-shadow: 0 0 0 3px rgba(47, 125, 79, 0.15);
+  outline: none;
 }
 
 .button {
@@ -97,10 +132,22 @@
   background: #2f7d4f;
   color: #ffffff;
   cursor: pointer;
+  transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
 }
 
 .button:hover {
   background: #25653f;
+  box-shadow: 0 4px 12px rgba(47, 125, 79, 0.25);
+}
+
+.button:active {
+  transform: translateY(1px);
+  box-shadow: none;
+}
+
+.button:focus-visible {
+  outline: 2px solid #1f5f3b;
+  outline-offset: 2px;
 }
 
 .button:disabled {
@@ -171,13 +218,14 @@
 .plant-card {
   padding: 16px;
   cursor: default;
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
 .plant-card:hover,
 .plant-card:focus-within {
   border-color: #9fc4ac;
-  box-shadow: 0 6px 20px rgba(31, 95, 59, 0.12);
+  box-shadow: 0 8px 24px rgba(31, 95, 59, 0.16);
+  transform: translateY(-2px);
   outline: none;
 }
 
