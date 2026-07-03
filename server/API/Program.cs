@@ -5,8 +5,6 @@ using PlantCare.Api.Services.Implementations;
 using PlantCare.Api.Services.Interfaces;
 using PlantCare.Api.Services.PlantNet;
 using PlantCare.Api.Services.Recognition;
-using PlantCare.Api.Services.Interfaces;
-using PlantCare.Api.Services.Implementations;
 using PlantCare.Api.Services.Background;
 using Scalar.AspNetCore;
 

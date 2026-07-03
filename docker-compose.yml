@@ -1,4 +1,6 @@
-version: '3.8'
+# имя проекта задано явно — иначе docker compose падает,
+# т.к. имя папки (кириллица) не даёт вывести project name
+name: plantcare
 
 services:
   db:
