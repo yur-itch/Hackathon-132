@@ -7,30 +7,44 @@
 PlantCare — помощник по уходу за растениями (хакатон). Подробности в [README.md](README.md).
 
 ## Структура
-- `server/` — ASP.NET Core 10 Web API + EF Core (PostgreSQL) + Layered Structure (Services, Entities, Dtos, Data, Controllers). Порт **5071** (или в Docker).
+- `server/` — ASP.NET Core 10 Web API + EF Core (PostgreSQL), три проекта в одном решении:
+  - `server/API/` — контроллеры, DI-конфигурация (`Program.cs`), Dtos, Fixtures для мока распознавания.
+  - `server/Core/` — модели БД (`Models/`) и интерфейсы сервисов (`Services/Interfaces/`).
+  - `server/DataAccess/` — `DbContext`, реализации сервисов (`Services/`), сид (`Configurations/SeedData.cs`), фоновые задачи (`Services/Background/`).
+  
+  Порт **5071**. БД поднимается через `docker-compose up -d` (PostgreSQL, порт 5432).
 - `client/` — React + Vite + JavaScript + CSS + React Router. Порт **5173**.
 
 ## Железные правила
 1. **Контракт API — единый источник правды.** Меняешь модель/DTO на бэке →
    сразу правишь `client/src/api/client.js`. Не расходитесь.
+   (В `client/src/api/` также лежат `apiClient.js`/`plantsApi.js` — это неиспользуемый черновик,
+   ни одна страница их не импортирует; актуальный клиент только `client.js`.)
 2. **Не лезь в чужие файлы.** Держись своей зоны (см. таблицу в README).
-   Общие точки (`Program.cs`, `App.jsx`, `AppDbContext.cs`) меняем аккуратно и предупреждаем команду.
+   Общие точки (`server/API/Program.cs`, `client/src/App.jsx`, `server/DataAccess/DbContext.cs`)
+   меняем аккуратно и предупреждаем команду.
 3. **Мелкие частые коммиты, узкие ветки по фиче.** Четыре агента быстро создают конфликты.
 4. **Владелец коллекции — заголовок `X-User-Id`** (по умолчанию `"local"`).
    Не хардкодь пользователя, бери из этого механизма.
 
 ## Бэкенд-стиль
-- Используем структуру папок: `Entities/` (вместо `Models/`), `Services/` (бизнес-логика), `Dtos/` (запросы/ответы), `Data/` (контекст БД и миграции), `Controllers/` (тонкие API-эндпоинты).
-- Работа с базой данных происходит через **Services** (Сервисы), контроллеры инжектируют интерфейсы сервисов, а не `AppDbContext` напрямую.
+- Слоистая структура на 3 проекта: `Core` (модели + интерфейсы сервисов) ← `DataAccess`
+  (реализации сервисов + `DbContext`) ← `API` (контроллеры, DI).
+- Работа с базой данных происходит через **Services** (Сервисы), контроллеры инжектируют интерфейсы
+  из `Core/Services/Interfaces`, а не `AppDbContext` напрямую.
 - Ответы контроллеров: сущности/модели напрямую или Dtos (для записи).
 - Enum'ы сериализуются строками (`"Watering"`). Циклы ссылок отключены (`IgnoreCycles`).
-- База данных: PostgreSQL. Запуск проекта локально или через Docker (`docker-compose up -d --build`). При изменениях схемы БД создавайте миграции: `dotnet ef migrations add <Name>`.
+- База данных: PostgreSQL. Запуск через Docker (`docker-compose up -d`). Схема сейчас накатывается
+  через `db.Database.EnsureCreated()` в `Program.cs` (не через EF-миграции) — если переходите на
+  `dotnet ef migrations add`, не забудьте заменить `EnsureCreated()` на `Database.Migrate()`.
 
 ## Фронтенд-стиль
-- Все запросы — через `client/src/api/client.js` (`api.plants`, `api.userPlants`, ...).
+- Все запросы — через `client/src/api/client.js` (`api.plants`, `api.userPlants`, `api.recognition`, ...).
   Не пиши `fetch` напрямую в компонентах.
 - Стили — обычный CSS (`client/src/App.css`, `client/src/index.css`). Tailwind не используем.
-- Одна страница = один файл в `client/src/pages/`. Роуты — в `App.jsx`.
+- Одна страница = один файл в `client/src/pages/` (`.jsx`). Роуты — в `App.jsx`.
+- **Избранное сейчас хранится только в `localStorage` браузера** (`api.favorites` в `client.js`),
+  без синхронизации с бэком — учитывайте это, если правите эту зону.
 
 ## Команды запуска и проверки
 - Запуск БД (PostgreSQL): `docker-compose up -d`

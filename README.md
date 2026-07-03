@@ -7,24 +7,32 @@
 | Слой | Технологии |
 |------|-----------|
 | Frontend | React 19 + Vite + JavaScript + CSS + React Router |
-| Backend | ASP.NET Core 10 Web API + EF Core |
-| БД | SQLite (старт) → PostgreSQL (переключается заменой провайдера) |
+| Backend | ASP.NET Core 10 Web API + EF Core, 3 проекта (API / Core / DataAccess) |
+| БД | PostgreSQL (через Docker Compose) |
 | Контракт | OpenAPI (`/openapi/v1.json`) + Scalar UI (`/scalar/v1`) |
 
-Монорепо: `client/` (фронт) + `server/` (бэк).
+Монорепо: `client/` (фронт) + `server/` (бэк: `API/`, `Core/`, `DataAccess/`).
 
 ## Запуск
 
-Нужны: **.NET 10 SDK**, **Node 20+**.
+Нужны: **.NET 10 SDK**, **Node 20+**, **Docker** (для БД).
+
+**База данных:**
+```bash
+docker-compose up -d
+```
+Поднимает PostgreSQL на `localhost:5432` (см. `docker-compose.yml`).
 
 **Бэкенд** (порт 5071):
 ```bash
-cd server
-dotnet run
+dotnet run --project server/API/API.csproj
+# или с hot reload:
+dotnet watch --project server/API/API.csproj
 ```
 - Swagger/Scalar UI: http://localhost:5071/scalar/v1
 - OpenAPI JSON: http://localhost:5071/openapi/v1.json
-- БД (`plantcare.db`) создаётся и наполняется справочником автоматически при первом старте.
+- Схема БД и справочник (`SeedData`) создаются автоматически при первом старте
+  (`Database.EnsureCreated()` — полноценных EF-миграций пока нет).
 
 **Фронтенд** (порт 5173):
 ```bash
@@ -36,31 +44,41 @@ npm run dev
 
 ## Архитектура и контракт
 
-Единый источник правды по API — **OpenAPI-схема бэка**. Фронт зеркалит её в
-[`client/src/api/client.js`](client/src/api/client.js). При изменении бэка обновляйте JS-клиент.
+Единый источник правды по API — **бэкенд**. Фронт обращается к нему через
+[`client/src/api/client.js`](client/src/api/client.js) (единственный реально используемый
+API-клиент — файлы `apiClient.js`/`plantsApi.js` в той же папке не импортируются нигде и
+являются черновиком, оставленным по ходу разработки).
 
 Идентификация пользователя в базовой версии — заголовок `X-User-Id`
-(по умолчанию `"local"`, без аккаунтов). Усложнение «авторизация» подставит реальный id.
+(по умолчанию `"local"`, без аккаунтов). Усложнение «авторизация» подставит реальный id
+(сервис и JWT-логика уже есть — `AuthService`, — но HTTP-эндпоинта под него пока нет).
 
-### Основные эндпоинты
+### Актуальные эндпоинты
 
 | Метод | Путь | Назначение |
 |-------|------|-----------|
-| GET | `/api/plants?search=&difficulty=` | справочник (поиск/фильтр) |
+| GET | `/api/plants?search=&isPoisonous=` | справочник (поиск/фильтр) |
 | GET | `/api/plants/{id}` | карточка растения |
-| GET/POST/PUT/DELETE | `/api/userplants` | личная коллекция |
-| GET/POST/PUT/DELETE | `/api/reminders` | напоминания |
-| POST | `/api/reminders/{id}/done` | отметить выполненным (сдвиг срока) |
-| GET/POST/DELETE | `/api/favorites` | избранное |
+| GET/POST/PUT/DELETE | `/api/user-plants` | личная коллекция (напоминания — поля `nextWateringDate`/`nextRepottingDate` на самой записи) |
+| POST | `/api/recognition/identify` | распознавание по фото (см. ниже) |
+
+**Не подключено к HTTP (сервис/логика есть, контроллера нет):** авторизация (`AuthService`),
+рекомендации (`RecommendationService`), избранное (`FavoritesService`), обмен растениями + чат
+(`ExchangeService`, `ExchangeOffer`/`ChatMessage`). Фоновая проверка напоминаний
+(`ReminderBackgroundService`) зарегистрирована как `IHostedService` и уже крутится в фоне.
+
+**Избранное** на фронте пока работает через `localStorage` браузера
+(`api.favorites` в `client.js`), без обращения к серверу — хотя `FavoritesService` на бэке
+уже есть, к нему просто ещё не подключились.
 
 ## Распределение по людям (4)
 
 | Кто | Зона | Основные файлы |
 |-----|------|----------------|
-| **1. Backend + БД** | схема, эндпоинты, сид, деплой | `server/**` |
-| **2. Frontend — справочник** | app shell, каталог, карточка, избранное | `client/src/App.jsx`, `pages/CatalogPage.jsx`, `pages/FavoritesPage.jsx` |
-| **3. Frontend — коллекция** | «мои растения», напоминания, уведомления | `pages/MyPlantsPage.jsx`, `pages/RemindersPage.jsx` |
-| **4. Full-stack — усложнения** | авторизация → фото → рекомендации → обмен+чат | новые модули, флаги фич |
+| **1. Backend — API-слой** | контроллеры, эндпоинты, DI | `server/API/**` |
+| **2. Backend — остальное** | сервисы, БД, инфраструктура, деплой | `server/Core/**`, `server/DataAccess/**`, `docker-compose.yml` |
+| **3. Full-stack — усложнения** | авторизация → фото → рекомендации → обмен+чат | новые модули, флаги фич |
+| **4. Frontend** | весь клиент: справочник, коллекция, напоминания, избранное | `client/**` |
 
 ## Распознавание растений по фото (Pl@ntNet)
 
@@ -79,24 +97,27 @@ npm run dev
 | `Failed` | реальный сбой API (таймаут/лимит/ключ) | мягкая ошибка, не 500 |
 
 Матчинг устойчив: обходит всех кандидатов (не только топ), матчит по нормализованной
-латыни и по `GbifId`. Порог уверенности — в конфиге (`PlantNet:ConfidenceThreshold`).
+латыни и по `GbifId`. Уверенность (`topScore`) считается по реально сматченной карточке,
+а не по топ-кандидату — если карточка нашлась у второго/третьего кандидата, в ответе будет
+именно его score. Порог уверенности — в конфиге (`PlantNet:ConfidenceThreshold`).
 
 ### Ключ и режимы
-- **Без ключа работает сразу** на фикстурах (`server/Fixtures/*.json`) — авто-мок.
+- **Без ключа работает сразу** на фикстурах (`server/API/Fixtures/*.json`) — авто-мок.
 - Ключ задавать **не в git**, а через user-secrets или env:
   ```bash
-  cd server
+  cd server/API
   dotnet user-secrets init
   dotnet user-secrets set "PlantNet:ApiKey" "ВАШ_КЛЮЧ"
   ```
-  (или переменная окружения `PlantNet__ApiKey`). Как только ключ есть — запросы идут в реальный API.
-- Форсировать мок на демо (без сети): `PlantNet:UseMock = true`.
+  (или переменная окружения `PlantNet__ApiKey`). Как только ключ есть — запросы идут в реальный API,
+  а `?scenario=` (мок) перестаёт учитываться.
+- Форсировать мок при наличии ключа (демо без сети): `PlantNet:UseMock = true` в `server/API/appsettings.json`.
 
 ### Как проверить
 - **Реальный API изолированно** (после получения ключа):
   `cd server && bash test-plantnet.sh ВАШ_КЛЮЧ` — дёрнет Pl@ntNet напрямую примером фото.
-- **Наш эндпоинт в мок-режиме** (без ключа): `?scenario=` выбирает фикстуру —
-  `monstera` (Matched), `secondmatch` (Matched через обход), `unknown` (нет карточки), `lowconfidence`:
+- **Наш эндпоинт в мок-режиме** (без ключа или с `PlantNet:UseMock = true`): `?scenario=` выбирает фикстуру —
+  `monstera` (Matched), `secondmatch` (Matched через обход кандидатов), `unknown` (нет карточки), `lowconfidence`:
   ```bash
   curl -X POST "http://localhost:5071/api/recognition/identify?scenario=monstera" \
     -F "image=@photo.jpg" -F "organ=auto"
@@ -105,10 +126,14 @@ npm run dev
 
 ## Дорожная карта усложнений (потолок коэф. 1.5)
 
-1. ✅ Сервер + синхронизация (уже заложено этой архитектурой)
-2. ☐ Авторизация (`User`-модель уже есть, нужен endpoint + JWT)
+1. ✅ Сервер + синхронизация (Postgres + Docker, коллекция и справочник синхронизированы;
+   избранное — исключение, оно пока только в localStorage)
+2. 🔶 Авторизация — `AuthService` (регистрация/логин, BCrypt, JWT) реализован, но нет
+   `AuthController` и `UseAuthentication/UseAuthorization` в `Program.cs`
 3. ✅ Распознавание по фото — Pl@ntNet (см. раздел выше), без своего ML
-4. ☐ Рекомендации — простые правила по свету/поливу
-5. ☐ Обмен растениями + чат (дороже, realtime)
+4. 🔶 Рекомендации — `RecommendationService` реализован (правила по сложности ухода и
+   частоте полива относительно коллекции пользователя), но нет `RecommendationController`
+5. 🔶 Обмен растениями + чат — модели `ExchangeOffer`/`ChatMessage` и `ExchangeService`
+   реализованы, контроллера и фронта пока нет
 
-Берём по возрастанию цены балла, каждая фича — за флагом, чтобы не ломать базу.
+Легенда: ✅ доступно через API и фронт · 🔶 бизнес-логика есть, но не подключена к HTTP · ☐ не начато.
