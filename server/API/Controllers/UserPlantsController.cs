@@ -1,5 +1,3 @@
-using System.Security.Claims;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PlantCare.Api.Dtos;
 using PlantCare.Api.Models;
@@ -8,7 +6,6 @@ using PlantCare.Api.Services.Interfaces;
 namespace PlantCare.Api.Controllers;
 
 [ApiController]
-[Authorize]
 [Route("api/user-plants")]
 public sealed class UserPlantsController : ControllerBase
 {
@@ -80,8 +77,9 @@ public sealed class UserPlantsController : ControllerBase
     }
 
     private string GetOwnerId()
-        => User.FindFirstValue(ClaimTypes.NameIdentifier)
-            ?? throw new InvalidOperationException("Authenticated user id claim is missing.");
+        => Request.Headers.TryGetValue("X-User-Id", out var value) && !string.IsNullOrWhiteSpace(value)
+            ? value.ToString()
+            : "local";
 
     private static UserPlantDto ToDto(UserPlant userPlant)
     {

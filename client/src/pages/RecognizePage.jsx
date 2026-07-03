@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { api } from "../api/client.js";
+import PlantCard from "../components/PlantCard.jsx";
 
 const mockScenarios = [
   { value: "", label: "Реальный API или настройка backend" },
@@ -16,6 +17,7 @@ export default function RecognizePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
+  const [favoriteIds, setFavoriteIds] = useState(api.favorites.ids());
 
   function handleFileChange(selectedFile) {
     setFile(selectedFile);
@@ -41,6 +43,16 @@ export default function RecognizePage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function toggleFavorite(plantId) {
+    if (favoriteIds.includes(plantId)) {
+      api.favorites.remove(plantId);
+    } else {
+      api.favorites.add(plantId);
+    }
+
+    setFavoriteIds(api.favorites.ids());
   }
 
   return (
@@ -85,19 +97,28 @@ export default function RecognizePage() {
           <p>{result.message}</p>
 
           {result.matchedCard && (
-            <div className="result-card">
-              <h2>{result.matchedCard.name}</h2>
-              {result.matchedCard.latinName && (
-                <p className="latin-name">{result.matchedCard.latinName}</p>
-              )}
-            </div>
+            <PlantCard
+              plant={result.matchedCard}
+              actions={
+                <button
+                  className={
+                    favoriteIds.includes(result.matchedCard.id)
+                      ? "button button-secondary"
+                      : "button"
+                  }
+                  onClick={() => toggleFavorite(result.matchedCard.id)}
+                >
+                  {favoriteIds.includes(result.matchedCard.id) ? "В избранном" : "В избранное"}
+                </button>
+              }
+            />
           )}
 
           {!result.matchedCard && result.recognizedLatinName && (
             <p className="latin-name">{result.recognizedLatinName}</p>
           )}
 
-          {result.topScore !== null && result.topScore !== undefined && (
+          {result.topScore != null && (
             <p className="muted">Уверенность: {(result.topScore * 100).toFixed(0)}%</p>
           )}
 

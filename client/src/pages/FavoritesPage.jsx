@@ -1,16 +1,28 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "../api/client.js";
-import { demoPlants } from "../data/demoPlants.js";
 import PlantCard from "../components/PlantCard.jsx";
 
 export default function FavoritesPage() {
-  const [favoriteIds, setFavoriteIds] = useState(api.favorites.ids());
+  const [favoritePlants, setFavoritePlants] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const favoritePlants = demoPlants.filter((plant) => favoriteIds.includes(plant.id));
+  function loadFavorites() {
+    setLoading(true);
+    setError("");
+
+    api.favorites
+      .listMine()
+      .then(setFavoritePlants)
+      .catch(() => setError("Не удалось загрузить избранное"))
+      .finally(() => setLoading(false));
+  }
+
+  useEffect(loadFavorites, []);
 
   function removeFavorite(plantId) {
     api.favorites.remove(plantId);
-    setFavoriteIds(api.favorites.ids());
+    loadFavorites();
   }
 
   return (
@@ -19,6 +31,9 @@ export default function FavoritesPage() {
         <h1>Избранное</h1>
         <p>Растения, сохраненные в браузере для быстрого доступа.</p>
       </div>
+
+      {loading && <p className="muted">Загрузка…</p>}
+      {error && <p className="error">{error}</p>}
 
       <div className="card-grid">
         {favoritePlants.map((plant) => (
@@ -34,7 +49,9 @@ export default function FavoritesPage() {
         ))}
       </div>
 
-      {favoritePlants.length === 0 && <p className="muted">В избранном пока пусто.</p>}
+      {!loading && !error && favoritePlants.length === 0 && (
+        <p className="muted">В избранном пока пусто.</p>
+      )}
     </section>
   );
 }

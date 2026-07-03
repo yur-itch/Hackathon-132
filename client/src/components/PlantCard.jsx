@@ -1,4 +1,17 @@
+function formatDays(days) {
+  if (!days) return null;
+  return `раз в ${days} дн.`;
+}
+
+function formatMonths(months) {
+  if (!months) return null;
+  return `раз в ${months} мес.`;
+}
+
 export default function PlantCard({ plant, actions }) {
+  const watering = formatDays(plant.wateringFrequencyDays);
+  const repotting = formatMonths(plant.repottingFrequencyMonths);
+
   return (
     <article className="plant-card" tabIndex={0}>
       <div className="plant-card-summary">
@@ -11,9 +24,9 @@ export default function PlantCard({ plant, actions }) {
           {plant.description && <p className="muted">{plant.description}</p>}
 
           <div className="plant-facts">
-            {plant.watering && (
+            {watering && (
               <p>
-                <strong>Полив:</strong> {plant.watering}
+                <strong>Полив:</strong> {watering}
               </p>
             )}
             {plant.light && (
@@ -21,9 +34,9 @@ export default function PlantCard({ plant, actions }) {
                 <strong>Освещение:</strong> {plant.light}
               </p>
             )}
-            {plant.repotting && (
+            {repotting && (
               <p>
-                <strong>Пересадка:</strong> {plant.repotting}
+                <strong>Пересадка:</strong> {repotting}
               </p>
             )}
             {plant.toxicity && (

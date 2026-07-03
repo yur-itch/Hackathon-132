@@ -1,15 +1,24 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "../api/client.js";
-import { demoPlants } from "../data/demoPlants.js";
 import PlantCard from "../components/PlantCard.jsx";
 
 export default function CatalogPage() {
   const [search, setSearch] = useState("");
+  const [plants, setPlants] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [favoriteIds, setFavoriteIds] = useState(api.favorites.ids());
 
-  const filteredPlants = demoPlants.filter((plant) =>
-    plant.name.toLowerCase().includes(search.trim().toLowerCase()),
-  );
+  useEffect(() => {
+    setLoading(true);
+    setError("");
+
+    api.plants
+      .list({ search })
+      .then(setPlants)
+      .catch(() => setError("Не удалось загрузить справочник"))
+      .finally(() => setLoading(false));
+  }, [search]);
 
   function toggleFavorite(plantId) {
     if (favoriteIds.includes(plantId)) {
@@ -35,8 +44,11 @@ export default function CatalogPage() {
         placeholder="Поиск по названию"
       />
 
+      {loading && <p className="muted">Загрузка…</p>}
+      {error && <p className="error">{error}</p>}
+
       <div className="card-grid">
-        {filteredPlants.map((plant) => {
+        {plants.map((plant) => {
           const isFavorite = favoriteIds.includes(plant.id);
 
           return (
@@ -56,7 +68,9 @@ export default function CatalogPage() {
         })}
       </div>
 
-      {filteredPlants.length === 0 && <p className="muted">Растения с таким названием не найдены.</p>}
+      {!loading && !error && plants.length === 0 && (
+        <p className="muted">Растения с таким названием не найдены.</p>
+      )}
     </section>
   );
 }
