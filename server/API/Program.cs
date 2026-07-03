@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -14,6 +15,15 @@ using Scalar.AspNetCore;
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Jwt:Secret не должен жить в appsettings.json (утечёт в git). Если не задан через
+// user-secrets/env — генерируем случайный на время жизни процесса: авторизация продолжит
+// работать в рамках запуска, но токены, выданные до рестарта, после него станут невалидны.
+// Для стабильных сессий между рестартами задайте секрет явно (см. README).
+if (string.IsNullOrWhiteSpace(builder.Configuration["Jwt:Secret"]))
+{
+    builder.Configuration["Jwt:Secret"] = Convert.ToBase64String(RandomNumberGenerator.GetBytes(48));
+}
 
 builder.Services.AddDbContext<AppDbContext>(o =>
     o.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
@@ -39,7 +49,7 @@ builder.Services.AddHostedService<ReminderBackgroundService>();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        var secret = builder.Configuration["Jwt:Secret"] ?? "super_secret_key_plantcare_hackathon_2026_antigravity";
+        var secret = builder.Configuration["Jwt:Secret"]!; // гарантирован выше (задан или сгенерирован)
         var issuer = builder.Configuration["Jwt:Issuer"] ?? "PlantCareApi";
         var audience = builder.Configuration["Jwt:Audience"] ?? "PlantCareClient";
 
@@ -88,7 +98,19 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.EnsureCreated();
+    var wasCreated = db.Database.EnsureCreated();
+    if (!wasCreated)
+    {
+        // EnsureCreated() ничего не делает, если база уже существует — новые таблицы/колонки,
+        // добавленные в модели после первого запуска (например, PushSubscriptions,
+        // Reminder.NotifiedAt), НЕ появятся сами. Если после git pull видите ошибки вида
+        // "column ... does not exist" — снесите локальный volume БД (docker compose down -v)
+        // и поднимите заново. Полноценная замена — EF-миграции (dotnet ef migrations add).
+        app.Logger.LogWarning(
+            "БД уже существовала при старте — EnsureCreated() не применяет новые изменения " +
+            "схемы к существующей базе. Если видите ошибки 'column/relation does not exist' " +
+            "после обновления кода — выполните: docker compose down -v && docker compose up -d db");
+    }
     SeedData.EnsureSeeded(db);
 }
 

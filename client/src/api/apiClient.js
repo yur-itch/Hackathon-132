@@ -11,8 +11,23 @@ export async function apiRequest(path, options = {}) {
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(errorText || `HTTP error: ${response.status}`);
+    const raw = await response.text();
+    let message = raw;
+
+    // [ApiController] на невалидной модели отдаёт ValidationProblemDetails —
+    // JSON с errors по полям, а не читаемый текст. Разбираем, если получится.
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed.errors) {
+        message = Object.values(parsed.errors).flat().join(" ");
+      } else if (parsed.title) {
+        message = parsed.title;
+      }
+    } catch {
+      // не JSON — оставляем как есть
+    }
+
+    throw new Error(message || `HTTP error: ${response.status}`);
   }
 
   if (response.status === 204) {

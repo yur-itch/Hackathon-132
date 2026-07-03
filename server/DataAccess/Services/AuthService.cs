@@ -60,7 +60,7 @@ public class AuthService : IAuthService
 
     private string GenerateJwtToken(User user)
     {
-        var secret = _config["Jwt:Secret"] ?? "super_secret_key_plantcare_hackathon_2026_antigravity";
+        var secret = _config["Jwt:Secret"]!; // гарантирован в Program.cs (задан или сгенерирован на старте)
         var issuer = _config["Jwt:Issuer"] ?? "PlantCareApi";
         var audience = _config["Jwt:Audience"] ?? "PlantCareClient";
         var expiryMinutes = double.Parse(_config["Jwt:ExpiryMinutes"] ?? "1440");

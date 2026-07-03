@@ -28,10 +28,15 @@ public class PushService : IPushService
 
     public async Task SubscribeAsync(string ownerId, string endpoint, string p256dh, string auth)
     {
-        var existing = await _db.PushSubscriptions.FirstOrDefaultAsync(s => s.Endpoint == endpoint);
+        // Матчим по (OwnerId, Endpoint), а не только по Endpoint: один браузер (Endpoint)
+        // может быть подписан от лица нескольких владельцев на общем устройстве
+        // (например, разные пользователи логинятся на одном компьютере). Матчинг только
+        // по Endpoint молча переписал бы владельца существующей подписки — предыдущий
+        // владелец бы перестал получать уведомления без явного отказа.
+        var existing = await _db.PushSubscriptions
+            .FirstOrDefaultAsync(s => s.OwnerId == ownerId && s.Endpoint == endpoint);
         if (existing is not null)
         {
-            existing.OwnerId = ownerId;
             existing.P256dh = p256dh;
             existing.Auth = auth;
         }
