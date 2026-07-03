@@ -3,6 +3,7 @@ const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:5071";
 export async function apiRequest(path, options = {}) {
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
+    credentials: "include", // для того чтобы токен куки отправился в запросе
     headers: {
       "Content-Type": "application/json",
       ...options.headers,
