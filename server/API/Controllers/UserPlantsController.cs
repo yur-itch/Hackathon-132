@@ -1,5 +1,3 @@
-using System.Security.Claims;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PlantCare.Api.Dtos;
 using PlantCare.Api.Models;
@@ -8,7 +6,6 @@ using PlantCare.Api.Services.Interfaces;
 namespace PlantCare.Api.Controllers;
 
 [ApiController]
-[Authorize]
 [Route("api/user-plants")]
 public sealed class UserPlantsController : ControllerBase
 {
@@ -22,7 +19,7 @@ public sealed class UserPlantsController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IReadOnlyCollection<UserPlantDto>>> GetUserPlants()
     {
-        var userPlants = await _userPlantsService.GetUserPlantsAsync(GetOwnerId());
+        var userPlants = await _userPlantsService.GetUserPlantsAsync(this.GetOwnerId());
         return Ok(userPlants.Select(ToDto).ToList());
     }
 
@@ -31,7 +28,7 @@ public sealed class UserPlantsController : ControllerBase
         [FromBody] CreateUserPlantDto dto)
     {
         var result = await _userPlantsService.AddUserPlantAsync(
-            GetOwnerId(),
+            this.GetOwnerId(),
             dto.PlantId,
             dto.Note,
             dto.NextWateringDate,
@@ -62,7 +59,7 @@ public sealed class UserPlantsController : ControllerBase
         [FromBody] UpdateUserPlantDto dto)
     {
         var userPlant = await _userPlantsService.UpdateUserPlantAsync(
-            GetOwnerId(),
+            this.GetOwnerId(),
             id,
             dto.Note,
             dto.NextWateringDate,
@@ -75,13 +72,9 @@ public sealed class UserPlantsController : ControllerBase
     public async Task<IActionResult> DeleteUserPlant(
         Guid id)
     {
-        var deleted = await _userPlantsService.DeleteUserPlantAsync(GetOwnerId(), id);
+        var deleted = await _userPlantsService.DeleteUserPlantAsync(this.GetOwnerId(), id);
         return deleted ? NoContent() : NotFound();
     }
-
-    private string GetOwnerId()
-        => User.FindFirstValue(ClaimTypes.NameIdentifier)
-            ?? throw new InvalidOperationException("Authenticated user id claim is missing.");
 
     private static UserPlantDto ToDto(UserPlant userPlant)
     {

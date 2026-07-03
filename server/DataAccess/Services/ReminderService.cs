@@ -29,11 +29,16 @@ public class ReminderService : IReminderService
         return await q.OrderBy(r => r.NextDueAt).ToListAsync();
     }
 
+    // Npgsql пишет только Kind=Utc в колонки timestamptz, а из JSON даты приходят
+    // как Kind=Unspecified — без этого падает с ArgumentException при сохранении.
+    private static DateTime AsUtc(DateTime dt)
+        => dt.Kind == DateTimeKind.Utc ? dt : DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+
     public async Task<Reminder?> CreateAsync(
-        string ownerId, 
-        Guid userPlantId, 
-        ReminderType type, 
-        int intervalDays, 
+        string ownerId,
+        Guid userPlantId,
+        ReminderType type,
+        int intervalDays,
         DateTime? nextDueAt)
     {
         var owns = await _db.UserPlants.AnyAsync(x => x.Id == userPlantId && x.OwnerId == ownerId);
@@ -45,7 +50,7 @@ public class ReminderService : IReminderService
             UserPlantId = userPlantId,
             Type = type,
             IntervalDays = intervalDays,
-            NextDueAt = nextDueAt ?? DateTime.UtcNow.AddDays(intervalDays),
+            NextDueAt = nextDueAt.HasValue ? AsUtc(nextDueAt.Value) : DateTime.UtcNow.AddDays(intervalDays),
             Enabled = true
         };
 

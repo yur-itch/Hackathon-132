@@ -49,6 +49,18 @@
   color: #1f5f3b;
 }
 
+.account-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+
+.account-controls .button-secondary {
+  margin-top: 0;
+  padding: 6px 12px;
+}
+
 .main {
   max-width: 1100px;
   margin: 0 auto;
@@ -150,6 +162,7 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
+  align-items: start;
 }
 
 .plant-card,
@@ -157,6 +170,55 @@
   border: 1px solid #d8e2d1;
   border-radius: 8px;
   background: #ffffff;
+}
+
+.plant-card {
+  padding: 16px;
+  cursor: default;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.plant-card:hover,
+.plant-card:focus-within {
+  border-color: #9fc4ac;
+  box-shadow: 0 6px 20px rgba(31, 95, 59, 0.12);
+  outline: none;
+}
+
+.plant-card-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.plant-card-badge {
+  flex-shrink: 0;
+  border-radius: 999px;
+  padding: 2px 10px;
+  background: #eef6eb;
+  color: #1f5f3b;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.plant-card-details {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.25s ease;
+}
+
+.plant-card-details-inner {
+  overflow: hidden;
+}
+
+.plant-card:hover .plant-card-details,
+.plant-card:focus-within .plant-card-details {
+  grid-template-rows: 1fr;
+}
+
+.plant-card-actions {
+  margin-top: 10px;
 }
 
 .plant-image {

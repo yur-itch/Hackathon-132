@@ -20,6 +20,7 @@ public class Plant
     public string? Temperature { get; set; }
     public string? Toxicity { get; set; }          // токсичность для животных/детей
     public string Difficulty { get; set; } = "easy"; // easy | medium | hard
+    public string? CareFeatures { get; set; }      // доп. особенности ухода, не покрытые другими полями
 
     // GBIF taxon id — для стабильного матчинга результата распознавания по id,
     // а не по строке латинского имени. Необязательное поле.

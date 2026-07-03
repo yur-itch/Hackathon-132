@@ -24,11 +24,16 @@ public class UserPlantsService : IUserPlantsService
             .ToListAsync();
     }
 
+    // Npgsql пишет только Kind=Utc в колонки timestamptz, а из JSON даты приходят
+    // как Kind=Unspecified — без этого падает с ArgumentException при сохранении.
+    private static DateTime AsUtc(DateTime dt)
+        => dt.Kind == DateTimeKind.Utc ? dt : DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+
     public async Task<(CreateUserPlantResult Result, UserPlant? UserPlant)> AddUserPlantAsync(
-        string ownerId, 
-        int plantId, 
-        string? note, 
-        DateTime? nextWateringDate, 
+        string ownerId,
+        int plantId,
+        string? note,
+        DateTime? nextWateringDate,
         DateTime? nextRepottingDate)
     {
         var catalogPlant = await _db.Plants.FindAsync(plantId);
@@ -63,7 +68,7 @@ public class UserPlantsService : IUserPlantsService
             UserPlantId = userPlant.Id,
             Type = ReminderType.Watering,
             IntervalDays = wateringInterval,
-            NextDueAt = nextWateringDate ?? DateTime.UtcNow.AddDays(wateringInterval),
+            NextDueAt = nextWateringDate.HasValue ? AsUtc(nextWateringDate.Value) : DateTime.UtcNow.AddDays(wateringInterval),
             Enabled = true
         };
         _db.Reminders.Add(wateringReminder);
@@ -77,7 +82,7 @@ public class UserPlantsService : IUserPlantsService
                 UserPlantId = userPlant.Id,
                 Type = ReminderType.Repotting,
                 IntervalDays = repottingIntervalDays,
-                NextDueAt = nextRepottingDate ?? DateTime.UtcNow.AddMonths(catalogPlant.RepottingFrequencyMonths.Value),
+                NextDueAt = nextRepottingDate.HasValue ? AsUtc(nextRepottingDate.Value) : DateTime.UtcNow.AddMonths(catalogPlant.RepottingFrequencyMonths.Value),
                 Enabled = true
             };
             _db.Reminders.Add(repottingReminder);
@@ -90,7 +95,7 @@ public class UserPlantsService : IUserPlantsService
                 UserPlantId = userPlant.Id,
                 Type = ReminderType.Repotting,
                 IntervalDays = 365,
-                NextDueAt = nextRepottingDate.Value,
+                NextDueAt = AsUtc(nextRepottingDate.Value),
                 Enabled = true
             };
             _db.Reminders.Add(repottingReminder);
@@ -125,7 +130,7 @@ public class UserPlantsService : IUserPlantsService
         {
             if (wateringReminder != null)
             {
-                wateringReminder.NextDueAt = nextWateringDate.Value;
+                wateringReminder.NextDueAt = AsUtc(nextWateringDate.Value);
                 wateringReminder.Enabled = true;
             }
             else
@@ -137,7 +142,7 @@ public class UserPlantsService : IUserPlantsService
                     UserPlantId = userPlant.Id,
                     Type = ReminderType.Watering,
                     IntervalDays = interval,
-                    NextDueAt = nextWateringDate.Value,
+                    NextDueAt = AsUtc(nextWateringDate.Value),
                     Enabled = true
                 });
             }
@@ -148,7 +153,7 @@ public class UserPlantsService : IUserPlantsService
         {
             if (repottingReminder != null)
             {
-                repottingReminder.NextDueAt = nextRepottingDate.Value;
+                repottingReminder.NextDueAt = AsUtc(nextRepottingDate.Value);
                 repottingReminder.Enabled = true;
             }
             else
@@ -160,7 +165,7 @@ public class UserPlantsService : IUserPlantsService
                     UserPlantId = userPlant.Id,
                     Type = ReminderType.Repotting,
                     IntervalDays = interval,
-                    NextDueAt = nextRepottingDate.Value,
+                    NextDueAt = AsUtc(nextRepottingDate.Value),
                     Enabled = true
                 });
             }

@@ -1,12 +1,15 @@
 import { useState } from "react";
 import { api } from "../api/client.js";
+import PlantCard from "../components/PlantCard.jsx";
+
+const recognitionMocksEnabled = import.meta.env.VITE_ENABLE_RECOGNITION_MOCKS === "true";
 
 const mockScenarios = [
-  { value: "", label: "Реальный API или настройка backend" },
-  { value: "monstera", label: "monstera: найдена карточка" },
-  { value: "secondmatch", label: "secondmatch: найден второй кандидат" },
-  { value: "unknown", label: "unknown: карточки нет" },
-  { value: "lowconfidence", label: "lowconfidence: низкая уверенность" },
+  { value: "", label: "Real API" },
+  { value: "monstera", label: "monstera: matched plant card" },
+  { value: "secondmatch", label: "secondmatch: matched second candidate" },
+  { value: "unknown", label: "unknown: no card found" },
+  { value: "lowconfidence", label: "lowconfidence: low confidence" },
 ];
 
 export default function RecognizePage() {
@@ -16,6 +19,7 @@ export default function RecognizePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
+  const [favoriteIds, setFavoriteIds] = useState(api.favorites.ids());
 
   function handleFileChange(selectedFile) {
     setFile(selectedFile);
@@ -34,7 +38,8 @@ export default function RecognizePage() {
     setResult(null);
 
     try {
-      const response = await api.recognition.identify(file, "auto", scenario);
+      const activeScenario = recognitionMocksEnabled ? scenario : "";
+      const response = await api.recognition.identify(file, "auto", activeScenario);
       setResult(response);
     } catch (requestError) {
       setError(requestError.message || "Не удалось распознать растение");
@@ -43,11 +48,21 @@ export default function RecognizePage() {
     }
   }
 
+  function toggleFavorite(plantId) {
+    if (favoriteIds.includes(plantId)) {
+      api.favorites.remove(plantId);
+    } else {
+      api.favorites.add(plantId);
+    }
+
+    setFavoriteIds(api.favorites.ids());
+  }
+
   return (
     <section>
       <div className="page-title">
         <h1>Распознать растение</h1>
-        <p>Загрузите фото, backend отправит его в сервис распознавания или мок-сценарий.</p>
+        <p>Загрузите фото, backend отправит его в сервис распознавания.</p>
       </div>
 
       <div className="form-panel narrow">
@@ -60,17 +75,19 @@ export default function RecognizePage() {
 
         {preview && <img className="preview-image" src={preview} alt="Предпросмотр" />}
 
-        <select
-          className="input"
-          value={scenario}
-          onChange={(event) => setScenario(event.target.value)}
-        >
-          {mockScenarios.map((item) => (
-            <option key={item.value} value={item.value}>
-              {item.label}
-            </option>
-          ))}
-        </select>
+        {recognitionMocksEnabled && (
+          <select
+            className="input"
+            value={scenario}
+            onChange={(event) => setScenario(event.target.value)}
+          >
+            {mockScenarios.map((item) => (
+              <option key={item.value} value={item.value}>
+                {item.label}
+              </option>
+            ))}
+          </select>
+        )}
 
         <button className="button" onClick={submitPhoto} disabled={!file || loading}>
           {loading ? "Распознаем..." : "Распознать"}
@@ -85,19 +102,28 @@ export default function RecognizePage() {
           <p>{result.message}</p>
 
           {result.matchedCard && (
-            <div className="result-card">
-              <h2>{result.matchedCard.name}</h2>
-              {result.matchedCard.latinName && (
-                <p className="latin-name">{result.matchedCard.latinName}</p>
-              )}
-            </div>
+            <PlantCard
+              plant={result.matchedCard}
+              actions={
+                <button
+                  className={
+                    favoriteIds.includes(result.matchedCard.id)
+                      ? "button button-secondary"
+                      : "button"
+                  }
+                  onClick={() => toggleFavorite(result.matchedCard.id)}
+                >
+                  {favoriteIds.includes(result.matchedCard.id) ? "В избранном" : "В избранное"}
+                </button>
+              }
+            />
           )}
 
           {!result.matchedCard && result.recognizedLatinName && (
             <p className="latin-name">{result.recognizedLatinName}</p>
           )}
 
-          {result.topScore !== null && result.topScore !== undefined && (
+          {result.topScore != null && (
             <p className="muted">Уверенность: {(result.topScore * 100).toFixed(0)}%</p>
           )}
 
