@@ -182,6 +182,21 @@
   margin: 6px 0;
 }
 
+.plant-facts {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0;
+}
+
+.plant-facts p {
+  margin: 0;
+  line-height: 1.45;
+}
+
+.plant-facts strong {
+  color: #1f5f3b;
+}
+
 .latin-name {
   color: #66736a;
   font-style: italic;
