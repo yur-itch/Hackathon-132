@@ -17,4 +17,9 @@
     <PackageReference Include="Scalar.AspNetCore" Version="2.16.9" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Core\Core.csproj" />
+    <ProjectReference Include="..\DataAccess\DataAccess.csproj" />
+  </ItemGroup>
+
 </Project>
