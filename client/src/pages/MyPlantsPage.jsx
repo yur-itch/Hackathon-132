@@ -114,6 +114,9 @@ export default function MyPlantsPage() {
           <div className="list-item" key={plant.id}>
             <div>
               <h2>{plant.plantName || plant.nickname}</h2>
+              {plant.addedAt && (
+                <p className="muted">Добавлено: {new Date(plant.addedAt).toLocaleDateString()}</p>
+              )}
               {plant.note && <p className="muted">{plant.note}</p>}
               {plant.nextWateringDate && (
                 <p className="muted">Полив: {new Date(plant.nextWateringDate).toLocaleDateString()}</p>

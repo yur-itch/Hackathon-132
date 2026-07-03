@@ -92,6 +92,7 @@ public sealed class UserPlantsController : ControllerBase
             userPlant.Plant?.Name ?? userPlant.Nickname,
             userPlant.Plant?.ImageUrl,
             userPlant.Notes,
+            userPlant.AddedAt,
             wateringReminder?.NextDueAt,
             repottingReminder?.NextDueAt,
             wateringReminder?.Id,

@@ -31,6 +31,7 @@ public sealed record UserPlantDto(
     string PlantName,
     string? PlantImageUrl,
     string? Note,
+    DateTime AddedAt,
     DateTime? NextWateringDate,
     DateTime? NextRepottingDate,
     Guid? WateringReminderId,
