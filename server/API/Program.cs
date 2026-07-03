@@ -5,10 +5,9 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// БД: SQLite для нулевого старта. Для перехода на PostgreSQL —
-// замените UseSqlite на UseNpgsql и строку подключения в appsettings.json.
+// БД: PostgreSQL
 builder.Services.AddDbContext<AppDbContext>(o =>
-    o.UseSqlite(builder.Configuration.GetConnectionString("Default") ?? "Data Source=plantcare.db"));
+    o.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
 
 builder.Services.AddControllers().AddJsonOptions(o =>
 {
