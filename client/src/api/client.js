@@ -14,6 +14,7 @@ import {
   updateUserPlant,
 } from "./userPlantsApi.js";
 import { identify } from "./recognitionApi.js";
+import { getMe, login, logout, register } from "./authApi.js";
 
 const FAVORITES_KEY = "favoritePlantIds";
 
@@ -70,5 +71,12 @@ export const api = {
 
   recognition: {
     identify,
+  },
+
+  auth: {
+    register,
+    login,
+    logout,
+    me: getMe,
   },
 };

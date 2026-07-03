@@ -4,6 +4,8 @@ import FavoritesPage from "./pages/FavoritesPage.jsx";
 import MyPlantsPage from "./pages/MyPlantsPage.jsx";
 import RecognizePage from "./pages/RecognizePage.jsx";
 import RemindersPage from "./pages/RemindersPage.jsx";
+import AuthPage from "./pages/AuthPage.jsx";
+import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
 import "./App.css";
 
 const menuItems = [
@@ -18,7 +20,32 @@ function getLinkClass({ isActive }) {
   return isActive ? "nav-link nav-link-active" : "nav-link";
 }
 
-export default function App() {
+function AccountControls() {
+  const { user, loading, logout } = useAuth();
+
+  if (loading) {
+    return null;
+  }
+
+  if (!user) {
+    return (
+      <NavLink to="/auth" className={getLinkClass}>
+        Войти
+      </NavLink>
+    );
+  }
+
+  return (
+    <div className="account-controls">
+      <span className="muted">{user.displayName}</span>
+      <button className="button button-secondary" onClick={logout}>
+        Выйти
+      </button>
+    </div>
+  );
+}
+
+function AppShell() {
   return (
     <div className="app">
       <header className="header">
@@ -35,6 +62,8 @@ export default function App() {
               </NavLink>
             ))}
           </nav>
+
+          <AccountControls />
         </div>
       </header>
 
@@ -46,8 +75,17 @@ export default function App() {
           <Route path="/reminders" element={<RemindersPage />} />
           <Route path="/favorites" element={<FavoritesPage />} />
           <Route path="/recognize" element={<RecognizePage />} />
+          <Route path="/auth" element={<AuthPage />} />
         </Routes>
       </main>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppShell />
+    </AuthProvider>
   );
 }

@@ -19,7 +19,7 @@ public sealed class UserPlantsController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IReadOnlyCollection<UserPlantDto>>> GetUserPlants()
     {
-        var userPlants = await _userPlantsService.GetUserPlantsAsync(GetOwnerId());
+        var userPlants = await _userPlantsService.GetUserPlantsAsync(this.GetOwnerId());
         return Ok(userPlants.Select(ToDto).ToList());
     }
 
@@ -28,7 +28,7 @@ public sealed class UserPlantsController : ControllerBase
         [FromBody] CreateUserPlantDto dto)
     {
         var result = await _userPlantsService.AddUserPlantAsync(
-            GetOwnerId(),
+            this.GetOwnerId(),
             dto.PlantId,
             dto.Note,
             dto.NextWateringDate,
@@ -59,7 +59,7 @@ public sealed class UserPlantsController : ControllerBase
         [FromBody] UpdateUserPlantDto dto)
     {
         var userPlant = await _userPlantsService.UpdateUserPlantAsync(
-            GetOwnerId(),
+            this.GetOwnerId(),
             id,
             dto.Note,
             dto.NextWateringDate,
@@ -72,14 +72,9 @@ public sealed class UserPlantsController : ControllerBase
     public async Task<IActionResult> DeleteUserPlant(
         Guid id)
     {
-        var deleted = await _userPlantsService.DeleteUserPlantAsync(GetOwnerId(), id);
+        var deleted = await _userPlantsService.DeleteUserPlantAsync(this.GetOwnerId(), id);
         return deleted ? NoContent() : NotFound();
     }
-
-    private string GetOwnerId()
-        => Request.Headers.TryGetValue("X-User-Id", out var value) && !string.IsNullOrWhiteSpace(value)
-            ? value.ToString()
-            : "local";
 
     private static UserPlantDto ToDto(UserPlant userPlant)
     {

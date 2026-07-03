@@ -20,7 +20,7 @@ public sealed class RemindersController : ControllerBase
     // иначе все напоминания если false, по умолчанию flase
     public async Task<IActionResult> GetReminders([FromQuery] bool dueOnly = false)
     {
-        var reminders = await _reminderService.GetMineAsync(GetOwnerId(), dueOnly);
+        var reminders = await _reminderService.GetMineAsync(this.GetOwnerId(), dueOnly);
         return Ok(reminders);
     }
 
@@ -28,7 +28,7 @@ public sealed class RemindersController : ControllerBase
     public async Task<IActionResult> CreateReminder([FromBody] CreateReminderDto dto)
     {
         var reminder = await _reminderService.CreateAsync(
-            GetOwnerId(),
+            this.GetOwnerId(),
             dto.UserPlantId,
             dto.Type,
             dto.IntervalDays,
@@ -46,7 +46,7 @@ public sealed class RemindersController : ControllerBase
     public async Task<IActionResult> UpdateReminder(Guid id, [FromBody] UpdateReminderDto dto)
     {
         var updated = await _reminderService.UpdateAsync(
-            GetOwnerId(),
+            this.GetOwnerId(),
             id,
             dto.IntervalDays,
             dto.Enabled);
@@ -62,7 +62,7 @@ public sealed class RemindersController : ControllerBase
     [HttpPost("{id:guid}/done")]
     public async Task<IActionResult> MarkReminderDone(Guid id)
     {
-        var updated = await _reminderService.MarkDoneAsync(id, GetOwnerId());
+        var updated = await _reminderService.MarkDoneAsync(id, this.GetOwnerId());
 
         if (!updated)
         {
@@ -75,7 +75,7 @@ public sealed class RemindersController : ControllerBase
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> DeleteReminder(Guid id)
     {
-        var deleted = await _reminderService.DeleteAsync(id, GetOwnerId());
+        var deleted = await _reminderService.DeleteAsync(id, this.GetOwnerId());
 
         if (!deleted)
         {
@@ -84,9 +84,4 @@ public sealed class RemindersController : ControllerBase
 
         return NoContent();
     }
-
-    private string GetOwnerId()
-        => Request.Headers.TryGetValue("X-User-Id", out var value) && !string.IsNullOrWhiteSpace(value)
-            ? value.ToString()
-            : "local";
 }

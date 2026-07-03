@@ -18,7 +18,7 @@ public sealed class FavoritesController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IReadOnlyCollection<Plant>>> GetFavorites()
     {
-        var favorites = await _favoritesService.GetFavoritesAsync(GetOwnerId());
+        var favorites = await _favoritesService.GetFavoritesAsync(this.GetOwnerId());
 
         var plants = favorites
             .Where(favorite => favorite.Plant is not null)
@@ -31,13 +31,13 @@ public sealed class FavoritesController : ControllerBase
     [HttpPost("{plantId:int}")]
     public async Task<IActionResult> AddFavorite(int plantId)
     {
-        var alreadyFavorite = await _favoritesService.IsFavoriteAsync(GetOwnerId(), plantId);
+        var alreadyFavorite = await _favoritesService.IsFavoriteAsync(this.GetOwnerId(), plantId);
         if (alreadyFavorite)
         {
             return Conflict("Plant is already in favorites.");
         }
 
-        var added = await _favoritesService.AddToFavoritesAsync(GetOwnerId(), plantId);
+        var added = await _favoritesService.AddToFavoritesAsync(this.GetOwnerId(), plantId);
         if (!added)
         {
             return NotFound("Plant not found.");
@@ -49,7 +49,7 @@ public sealed class FavoritesController : ControllerBase
     [HttpDelete("{plantId:int}")]
     public async Task<IActionResult> DeleteFavorite(int plantId)
     {
-        var deleted = await _favoritesService.RemoveFromFavoritesAsync(GetOwnerId(), plantId);
+        var deleted = await _favoritesService.RemoveFromFavoritesAsync(this.GetOwnerId(), plantId);
         if (!deleted)
         {
             return NotFound();
@@ -57,9 +57,4 @@ public sealed class FavoritesController : ControllerBase
 
         return NoContent();
     }
-
-    private string GetOwnerId()
-        => Request.Headers.TryGetValue("X-User-Id", out var value) && !string.IsNullOrWhiteSpace(value)
-            ? value.ToString()
-            : "local";
 }

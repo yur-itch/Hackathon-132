@@ -49,6 +49,18 @@
   color: #1f5f3b;
 }
 
+.account-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+
+.account-controls .button-secondary {
+  margin-top: 0;
+  padding: 6px 12px;
+}
+
 .main {
   max-width: 1100px;
   margin: 0 auto;
