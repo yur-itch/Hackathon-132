@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { api } from "../api/client.js";
 import { demoPlants } from "../data/demoPlants.js";
+import PlantCard from "../components/PlantCard.jsx";
 
 export default function CatalogPage() {
   const [search, setSearch] = useState("");
@@ -39,37 +40,18 @@ export default function CatalogPage() {
           const isFavorite = favoriteIds.includes(plant.id);
 
           return (
-            <article className="plant-card" key={plant.id}>
-              <div className="plant-card-body">
-                <h2>{plant.name}</h2>
-                <p className="muted">{plant.description}</p>
-
-                <div className="plant-facts">
-                  <p>
-                    <strong>Полив:</strong> {plant.watering}
-                  </p>
-                  <p>
-                    <strong>Освещение:</strong> {plant.light}
-                  </p>
-                  <p>
-                    <strong>Пересадка:</strong> {plant.repotting}
-                  </p>
-                  <p>
-                    <strong>Ядовитость:</strong> {plant.toxicity}
-                  </p>
-                  <p>
-                    <strong>Сложность ухода:</strong> {plant.difficulty}
-                  </p>
-                </div>
-
+            <PlantCard
+              key={plant.id}
+              plant={plant}
+              actions={
                 <button
                   className={isFavorite ? "button button-secondary" : "button"}
                   onClick={() => toggleFavorite(plant.id)}
                 >
                   {isFavorite ? "В избранном" : "В избранное"}
                 </button>
-              </div>
-            </article>
+              }
+            />
           );
         })}
       </div>
