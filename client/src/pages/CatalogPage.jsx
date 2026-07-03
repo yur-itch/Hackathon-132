@@ -14,7 +14,7 @@ export default function CatalogPage() {
     setError("");
 
     api.plants
-      .list({ search })
+      .list(search)
       .then(setPlants)
       .catch(() => setError("Не удалось загрузить справочник"))
       .finally(() => setLoading(false));
