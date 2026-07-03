@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PlantCare.Api.Dtos;
 using PlantCare.Api.Models;
 using PlantCare.Api.Services.Interfaces;
 
@@ -18,8 +17,10 @@ public sealed class RecommendationsController : ControllerBase
         _recommendationService = recommendationService;
     }
 
+    // Отдаём Plant напрямую — та же форма, что и в справочнике,
+    // чтобы фронт рисовал рекомендации той же карточкой PlantCard.
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyCollection<PlantListItemDto>>> GetRecommendations(
+    public async Task<ActionResult<IReadOnlyCollection<Plant>>> GetRecommendations(
         [FromQuery] int count = 3)
     {
         if (count <= 0)
@@ -31,18 +32,6 @@ public sealed class RecommendationsController : ControllerBase
             this.GetOwnerId(),
             count);
 
-        return Ok(recommendations.Select(ToDto).ToList());
-    }
-
-    private static PlantListItemDto ToDto(Plant plant)
-    {
-        return new PlantListItemDto(
-            plant.Id,
-            plant.Name,
-            plant.Description,
-            $"Water every {plant.WateringFrequencyDays} days",
-            plant.Light,
-            !string.IsNullOrWhiteSpace(plant.Toxicity),
-            plant.ImageUrl);
+        return Ok(recommendations.ToList());
     }
 }

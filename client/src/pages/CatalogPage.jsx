@@ -7,6 +7,7 @@ export default function CatalogPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [favoriteIds, setFavoriteIds] = useState([]);
+  const [recommended, setRecommended] = useState([]);
 
   useEffect(() => {
     setLoading(true);
@@ -19,6 +20,9 @@ export default function CatalogPage() {
       .finally(() => setLoading(false));
 
     api.favorites.ids().then(setFavoriteIds).catch(() => {});
+
+    // Рекомендации — необязательное украшение: при ошибке просто не показываем секцию
+    api.recommendations.list(3).then(setRecommended).catch(() => {});
   }, []);
 
   async function toggleFavorite(plantId) {
@@ -40,6 +44,19 @@ export default function CatalogPage() {
     }
   }
 
+  function favoriteButton(plantId) {
+    const isFavorite = favoriteIds.includes(plantId);
+
+    return (
+      <button
+        className={isFavorite ? "button button-secondary" : "button"}
+        onClick={() => toggleFavorite(plantId)}
+      >
+        {isFavorite ? "В избранном" : "В избранное"}
+      </button>
+    );
+  }
+
   return (
     <section>
       <div className="page-title">
@@ -50,25 +67,23 @@ export default function CatalogPage() {
       {loading && <p className="muted">Загрузка…</p>}
       {error && <p className="error">{error}</p>}
 
-      <div className="card-grid">
-        {plants.map((plant) => {
-          const isFavorite = favoriteIds.includes(plant.id);
+      {recommended.length > 0 && (
+        <>
+          <h2>Вам может подойти</h2>
+          <p className="muted">Подборка на основе вашей коллекции.</p>
+          <div className="card-grid">
+            {recommended.map((plant) => (
+              <PlantCard key={plant.id} plant={plant} actions={favoriteButton(plant.id)} />
+            ))}
+          </div>
+          <h2>Все растения</h2>
+        </>
+      )}
 
-          return (
-            <PlantCard
-              key={plant.id}
-              plant={plant}
-              actions={
-                <button
-                  className={isFavorite ? "button button-secondary" : "button"}
-                  onClick={() => toggleFavorite(plant.id)}
-                >
-                  {isFavorite ? "В избранном" : "В избранное"}
-                </button>
-              }
-            />
-          );
-        })}
+      <div className="card-grid">
+        {plants.map((plant) => (
+          <PlantCard key={plant.id} plant={plant} actions={favoriteButton(plant.id)} />
+        ))}
       </div>
 
       {!loading && !error && plants.length === 0 && (
