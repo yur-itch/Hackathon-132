@@ -11,15 +11,25 @@ function ChatPanel({ offer, otherUserId, otherUserDisplayName, myId, onClose, on
 
   const isOwner = String(offer.ownerId) === String(myId);
 
-  function load() {
+  // silent — для фонового поллинга: не показываем ошибку, если один опрос не удался
+  function load({ silent = false } = {}) {
     api.exchange
       .getMessages(offer.id, otherUserId)
-      .then(setMessages)
-      .catch(() => setError("Не удалось загрузить переписку"))
+      .then((data) => {
+        setMessages(data);
+        if (!silent) setError("");
+      })
+      .catch(() => {
+        if (!silent) setError("Не удалось загрузить переписку");
+      })
       .finally(() => setLoading(false));
   }
 
-  useEffect(load, [offer.id, otherUserId]);
+  useEffect(() => {
+    load();
+    const timer = setInterval(() => load({ silent: true }), 4000);
+    return () => clearInterval(timer);
+  }, [offer.id, otherUserId]);
 
   async function send() {
     if (!text.trim()) return;
