@@ -11,6 +11,8 @@ using PlantCare.Api.Services.PlantNet;
 using PlantCare.Api.Services.Recognition;
 using Scalar.AspNetCore;
 
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<AppDbContext>(o =>

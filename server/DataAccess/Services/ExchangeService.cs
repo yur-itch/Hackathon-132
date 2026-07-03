@@ -160,4 +160,88 @@ public class ExchangeService : IExchangeService
 
         return chats.OrderByDescending(c => c.LastMessage.SentAt).ToList();
     }
+
+    public async Task<bool> ConfirmExchangeAsync(Guid exchangeOfferId, string currentUserId, string otherUserId)
+    {
+        // 1. Находим активное предложение обмена по ID
+        var offer = await _db.ExchangeOffers
+            .Include(o => o.UserPlant)
+            .ThenInclude(up => up!.Plant)
+            .FirstOrDefaultAsync(o => o.Id == exchangeOfferId && o.IsActive);
+
+        if (offer == null) return false;
+
+        // 2. Убеждаемся, что текущий пользователь — владелец объявления
+        if (offer.OwnerId != currentUserId) return false;
+
+        // 3. Убеждаемся, что к объявлению привязано растение
+        if (offer.UserPlantId == null || offer.UserPlant == null) return false;
+
+        var userPlant = offer.UserPlant;
+
+        // 4. Убеждаемся, что растение принадлежит текущему пользователю
+        if (userPlant.OwnerId != currentUserId) return false;
+
+        // 5. Меняем владельца растения на собеседника (нового хозяина)
+        userPlant.OwnerId = otherUserId;
+
+        // 6. Очищаем все напоминания для этого растения
+        var oldReminders = await _db.Reminders
+            .Where(r => r.UserPlantId == userPlant.Id)
+            .ToListAsync();
+        _db.Reminders.RemoveRange(oldReminders);
+
+        // 7. Создаем новые напоминания для нового хозяина на основе каталога растения
+        if (userPlant.Plant != null)
+        {
+            var catalogPlant = userPlant.Plant;
+
+            int wateringInterval = catalogPlant.WateringFrequencyDays > 0 ? catalogPlant.WateringFrequencyDays : 7;
+            var wateringReminder = new Reminder
+            {
+                Id = Guid.NewGuid(),
+                UserPlantId = userPlant.Id,
+                Type = ReminderType.Watering,
+                IntervalDays = wateringInterval,
+                NextDueAt = DateTime.UtcNow.AddDays(wateringInterval),
+                Enabled = true
+            };
+            _db.Reminders.Add(wateringReminder);
+
+            if (catalogPlant.RepottingFrequencyMonths.HasValue && catalogPlant.RepottingFrequencyMonths.Value > 0)
+            {
+                int repottingIntervalDays = catalogPlant.RepottingFrequencyMonths.Value * 30;
+                var repottingReminder = new Reminder
+                {
+                    Id = Guid.NewGuid(),
+                    UserPlantId = userPlant.Id,
+                    Type = ReminderType.Repotting,
+                    IntervalDays = repottingIntervalDays,
+                    NextDueAt = DateTime.UtcNow.AddMonths(catalogPlant.RepottingFrequencyMonths.Value),
+                    Enabled = true
+                };
+                _db.Reminders.Add(repottingReminder);
+            }
+        }
+        else
+        {
+            // Если растение «своё» (не из каталога), создаем базовое напоминание о поливе по умолчанию
+            var wateringReminder = new Reminder
+            {
+                Id = Guid.NewGuid(),
+                UserPlantId = userPlant.Id,
+                Type = ReminderType.Watering,
+                IntervalDays = 7,
+                NextDueAt = DateTime.UtcNow.AddDays(7),
+                Enabled = true
+            };
+            _db.Reminders.Add(wateringReminder);
+        }
+
+        // 8. Переводим объявление в неактивный статус (обмен завершен)
+        offer.IsActive = false;
+
+        await _db.SaveChangesAsync();
+        return true;
+    }
 }
