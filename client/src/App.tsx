@@ -3,12 +3,14 @@ import CatalogPage from "./pages/CatalogPage";
 import MyPlantsPage from "./pages/MyPlantsPage";
 import RemindersPage from "./pages/RemindersPage";
 import FavoritesPage from "./pages/FavoritesPage";
+import RecognizePage from "./pages/RecognizePage";
 
 const tabs = [
   { to: "/catalog", label: "🌿 Справочник" },
   { to: "/my", label: "🪴 Мои растения" },
   { to: "/reminders", label: "⏰ Напоминания" },
   { to: "/favorites", label: "⭐ Избранное" },
+  { to: "/recognize", label: "📷 Распознать" },
 ];
 
 export default function App() {
@@ -42,6 +44,7 @@ export default function App() {
           <Route path="/my" element={<MyPlantsPage />} />
           <Route path="/reminders" element={<RemindersPage />} />
           <Route path="/favorites" element={<FavoritesPage />} />
+          <Route path="/recognize" element={<RecognizePage />} />
         </Routes>
       </main>
     </div>

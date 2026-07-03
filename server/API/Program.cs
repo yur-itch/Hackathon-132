@@ -1,6 +1,8 @@
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using PlantCare.Api.Data;
+using PlantCare.Api.Services.PlantNet;
+using PlantCare.Api.Services.Recognition;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,6 +19,13 @@ builder.Services.AddControllers().AddJsonOptions(o =>
 });
 
 builder.Services.AddOpenApi();
+
+// Распознавание растений по фото (Pl@ntNet). Без ключа работает на фикстурах (мок).
+builder.Services.Configure<PlantNetOptions>(
+    builder.Configuration.GetSection(PlantNetOptions.SectionName));
+builder.Services.AddHttpClient<IPlantNetClient, PlantNetClient>(c =>
+    c.Timeout = TimeSpan.FromSeconds(10));
+builder.Services.AddScoped<IRecognitionService, RecognitionService>();
 
 // CORS: открыто для дев-фронта (Vite на 5173). На проде сузить.
 const string DevCors = "dev";

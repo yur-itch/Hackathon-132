@@ -56,3 +56,23 @@ export interface CreateReminderDto {
   intervalDays: number;
   nextDueAt?: string | null;
 }
+
+// --- распознавание по фото ---
+export type MatchStatus = "Matched" | "RecognizedButNoCard" | "LowConfidence" | "Failed";
+
+export interface CandidateDto {
+  latinName?: string | null;
+  commonName?: string | null;
+  score: number;
+  gbifId?: string | null;
+}
+
+export interface RecognitionResult {
+  status: MatchStatus;
+  recognizedLatinName?: string | null;
+  recognizedCommonName?: string | null;
+  topScore?: number | null;
+  matchedCard?: Plant | null;
+  candidates: CandidateDto[];
+  message?: string | null;
+}

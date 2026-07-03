@@ -8,6 +8,7 @@ import type {
   Reminder,
   CreateUserPlantDto,
   CreateReminderDto,
+  RecognitionResult,
 } from "./types";
 
 const BASE = import.meta.env.VITE_API_URL ?? "http://localhost:5071";
@@ -66,5 +67,23 @@ export const api = {
     listMine: () => req<Plant[]>(`/api/favorites`),
     add: (plantId: number) => req<void>(`/api/favorites/${plantId}`, { method: "POST" }),
     remove: (plantId: number) => req<void>(`/api/favorites/${plantId}`, { method: "DELETE" }),
+  },
+
+  // Распознавание по фото
+  recognition: {
+    identify: (image: File, organ?: string, scenario?: string) => {
+      const form = new FormData();
+      form.append("image", image);
+      if (organ) form.append("organ", organ);
+      const qs = scenario ? `?scenario=${scenario}` : "";
+      return fetch(`${BASE}/api/recognition/identify${qs}`, {
+        method: "POST",
+        headers: { "X-User-Id": ownerId() },
+        body: form,
+      }).then((res) => {
+        if (!res.ok) throw new Error(`${res.status} ${res.statusText} — recognition/identify`);
+        return res.json() as Promise<RecognitionResult>;
+      });
+    },
   },
 };
