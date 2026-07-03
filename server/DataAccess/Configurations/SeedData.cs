@@ -25,6 +25,7 @@ public static class SeedData
                 Temperature = "18–27 °C",
                 Toxicity = "Токсична для кошек и собак",
                 Difficulty = "easy",
+                CareFeatures = "Любит опору для лазания (мох-палка); воздушные корни можно направлять в почву.",
                 GbifId = "2868241", // реальный GBIF id Monstera deliciosa (сверено с ответом Pl@ntNet)
                 ImageUrl = "https://images.unsplash.com/photo-1614594975525-e45190c55d0b"
             },
@@ -40,6 +41,7 @@ public static class SeedData
                 Temperature = "15–29 °C",
                 Toxicity = "Слаботоксична",
                 Difficulty = "easy",
+                CareFeatures = "Крайне устойчива к засухе, легко переносит пропуски полива; не любит переувлажнение.",
                 GbifId = "2770610", // GBIF usageKey Sansevieria trifasciata (api.gbif.org/v1/species/match)
                 ImageUrl = "https://images.unsplash.com/photo-1593482892290-f54927ae2b7c"
             },
@@ -55,6 +57,7 @@ public static class SeedData
                 Temperature = "16–24 °C",
                 Toxicity = "Токсичен для животных",
                 Difficulty = "hard",
+                CareFeatures = "Плохо переносит перестановку и сквозняки, может сбрасывать листья при стрессе.",
                 GbifId = "5361899", // GBIF usageKey Ficus lyrata (api.gbif.org/v1/species/match)
                 ImageUrl = "https://images.unsplash.com/photo-1597055181300-e3633a917b68"
             },
@@ -70,6 +73,7 @@ public static class SeedData
                 Temperature = "18–25 °C",
                 Toxicity = "Нетоксична",
                 Difficulty = "medium",
+                CareFeatures = "Растёт в прозрачном горшке с корой, а не в грунте; полив погружением раз в 7–10 дней.",
                 GbifId = "2804680", // GBIF usageKey Phalaenopsis (api.gbif.org/v1/species/match)
                 ImageUrl = "https://images.unsplash.com/photo-1524598171365-b45f6f8f8c0c"
             },
@@ -85,6 +89,7 @@ public static class SeedData
                 Temperature = "18–27 °C",
                 Toxicity = "Нетоксична",
                 Difficulty = "easy",
+                CareFeatures = "Не опрыскивать и не лить воду в центр розетки — застой воды вызывает гниение.",
                 GbifId = "5362052", // GBIF usageKey Echeveria (api.gbif.org/v1/species/match)
                 ImageUrl = "https://images.unsplash.com/photo-1509423350716-97f9360b4e09"
             },
@@ -100,6 +105,7 @@ public static class SeedData
                 Temperature = "18–26 °C",
                 Toxicity = "Токсична для кошек и собак",
                 Difficulty = "easy",
+                CareFeatures = "Чувствительна к холодному воздуху и сквознякам, любит стабильное тепло круглый год.",
                 GbifId = "2866438" // сверено с ответом Pl@ntNet
             },
             new Plant
@@ -114,6 +120,7 @@ public static class SeedData
                 Temperature = "18–24 °C",
                 Toxicity = "Нетоксичен",
                 Difficulty = "hard",
+                CareFeatures = "Не переносит сухой воздух и пересушку земляного кома — концы листьев быстро сохнут.",
                 GbifId = "2651826" // сверено с ответом Pl@ntNet
             },
             new Plant
@@ -128,6 +135,7 @@ public static class SeedData
                 Temperature = "18–24 °C",
                 Toxicity = "Нетоксична",
                 Difficulty = "medium",
+                CareFeatures = "Хорошо ветвится при регулярной прищипке верхушек побегов.",
                 GbifId = "5670312" // сверено с ответом Pl@ntNet
             },
             new Plant
@@ -142,6 +150,7 @@ public static class SeedData
                 Temperature = "20–28 °C",
                 Toxicity = "Токсичен для животных и людей",
                 Difficulty = "medium",
+                CareFeatures = "Сок раздражает кожу — при пересадке и обрезке лучше использовать перчатки.",
                 GbifId = "2873057" // сверено с ответом Pl@ntNet
             },
             new Plant
@@ -156,6 +165,7 @@ public static class SeedData
                 Temperature = "18–26 °C",
                 Toxicity = "Ядовит при попадании внутрь",
                 Difficulty = "easy",
+                CareFeatures = "Явно показывает нехватку воды поникшими листьями и быстро восстанавливается после полива.",
                 GbifId = "2869650" // сверено с ответом Pl@ntNet
             },
             new Plant
@@ -170,6 +180,7 @@ public static class SeedData
                 Temperature = "18–26 °C",
                 Toxicity = "Сильно токсична, сок опасен для кожи и слизистых",
                 Difficulty = "medium",
+                CareFeatures = "Держать вне досягаемости детей и животных — даже небольшой контакт с соком вызывает жжение.",
                 GbifId = "2869345" // сверено с ответом Pl@ntNet
             },
             new Plant
@@ -184,6 +195,7 @@ public static class SeedData
                 Temperature = "18–24 °C",
                 Toxicity = "Нетоксична",
                 Difficulty = "medium",
+                CareFeatures = "Листья складываются вертикально к ночи и раскрываются утром (никтинастия).",
                 GbifId = "2762406" // сверено с ответом Pl@ntNet
             },
             new Plant
@@ -198,6 +210,7 @@ public static class SeedData
                 Temperature = "18–25 °C",
                 Toxicity = "Токсична для кошек и собак",
                 Difficulty = "easy",
+                CareFeatures = "Чувствительна к фтору и хлору в воде — лучше поливать отстоянной или фильтрованной водой.",
                 GbifId = "10818704" // GBIF usageKey Dracaena marginata (api.gbif.org/v1/species/match)
             },
             new Plant
@@ -212,6 +225,7 @@ public static class SeedData
                 Temperature = "15–25 °C",
                 Toxicity = "Нетоксичен",
                 Difficulty = "easy",
+                CareFeatures = "Активно образует розетки-детки на длинных побегах, которые легко укореняются в воде.",
                 GbifId = "2774846" // GBIF usageKey Chlorophytum comosum (api.gbif.org/v1/species/match)
             },
             new Plant
@@ -226,6 +240,7 @@ public static class SeedData
                 Temperature = "18–24 °C",
                 Toxicity = "Нетоксична",
                 Difficulty = "easy",
+                CareFeatures = "Мясистые листья запасают воду — легко переносит редкий полив, но не переносит перелив.",
                 GbifId = "3086423" // GBIF usageKey Peperomia obtusifolia (api.gbif.org/v1/species/match)
             }
         );

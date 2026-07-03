@@ -44,6 +44,11 @@ export default function PlantCard({ plant, actions }) {
                 <strong>Ядовитость:</strong> {plant.toxicity}
               </p>
             )}
+            {plant.careFeatures && (
+              <p>
+                <strong>Особенности:</strong> {plant.careFeatures}
+              </p>
+            )}
           </div>
 
           {actions && <div className="plant-card-actions">{actions}</div>}
