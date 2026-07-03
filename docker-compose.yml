@@ -15,6 +15,11 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d plantcare"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   web:
     image: plantcare-api
@@ -29,7 +34,8 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__Default=Host=db;Port=5432;Database=plantcare;Username=postgres;Password=postgres
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
 volumes:
   pgdata:
