@@ -27,16 +27,22 @@ public sealed class UserPlantsController : ControllerBase
     {
         var result = await _userPlantsService.AddUserPlantAsync(GetOwnerId(), dto);
 
-        return result.Result switch
+        if (result.Result == CreateUserPlantResult.Created)
         {
-            CreateUserPlantResult.Created => CreatedAtAction(
-                nameof(GetUserPlants),
-                new { id = result.UserPlant!.Id },
-                result.UserPlant),
-            CreateUserPlantResult.PlantNotFound => NotFound("Plant not found."),
-            CreateUserPlantResult.AlreadyExists => Conflict("Plant is already added to the collection."),
-            _ => BadRequest()
-        };
+            return CreatedAtAction(nameof(GetUserPlants), new { id = result.UserPlant!.Id }, result.UserPlant);
+        }
+
+        if (result.Result == CreateUserPlantResult.PlantNotFound)
+        {
+            return NotFound("Plant not found.");
+        }
+
+        if (result.Result == CreateUserPlantResult.AlreadyExists)
+        {
+            return Conflict("Plant is already added to the collection.");
+        }
+
+        return BadRequest();
     }
 
     [HttpPut("{id:int}")]
