@@ -51,4 +51,10 @@ public interface IExchangeService
     /// Возвращает кортеж: (Предложение обмена, ID собеседника, Отображаемое имя собеседника, Последнее сообщение).
     /// </summary>
     Task<IEnumerable<(ExchangeOffer Offer, string OtherUserId, string OtherUserDisplayName, ChatMessage LastMessage)>> GetMyChatsAsync(string currentUserId);
+
+    /// <summary>
+    /// Подтвердить обмен с другим пользователем: передает права владения привязанным UserPlant,
+    /// пересоздает напоминания для нового хозяина и переводит объявление в статус неактивного.
+    /// </summary>
+    Task<bool> ConfirmExchangeAsync(Guid exchangeOfferId, string currentUserId, string otherUserId);
 }
