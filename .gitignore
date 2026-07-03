@@ -11,8 +11,14 @@ node_modules/
 dist/
 .vite/
 
+# --- секреты (НЕ коммитить ключи!) ---
+api_key.txt
+*.key
+secrets.json
+
 # --- env / IDE ---
 .env.local
+.claude/settings.local.json
 .vs/
 .idea/
 .vscode/

@@ -1,0 +1,14 @@
+{
+  "results": [
+    {
+      "score": 0.1123,
+      "species": {
+        "scientificNameWithoutAuthor": "Hedera helix",
+        "scientificName": "Hedera helix L.",
+        "commonNames": ["Плющ обыкновенный"]
+      },
+      "gbif": { "id": "2984545" }
+    }
+  ],
+  "remainingIdentificationRequests": 496
+}

@@ -1,0 +1,23 @@
+{
+  "results": [
+    {
+      "score": 0.5821,
+      "species": {
+        "scientificNameWithoutAuthor": "Anthurium andraeanum",
+        "scientificName": "Anthurium andraeanum Linden ex André",
+        "commonNames": ["Антуриум Андре"]
+      },
+      "gbif": { "id": "2873057" }
+    },
+    {
+      "score": 0.3140,
+      "species": {
+        "scientificNameWithoutAuthor": "Monstera deliciosa",
+        "scientificName": "Monstera deliciosa Liebm.",
+        "commonNames": ["Монстера"]
+      },
+      "gbif": { "id": "2868241" }
+    }
+  ],
+  "remainingIdentificationRequests": 498
+}

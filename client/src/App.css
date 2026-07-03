@@ -95,6 +95,21 @@
   background: #25653f;
 }
 
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.button-secondary {
+  margin-top: 10px;
+  background: #eef6eb;
+  color: #1f5f3b;
+}
+
+.button-secondary:hover {
+  background: #dcefd6;
+}
+
 .button-danger {
   background: #c2413d;
 }
@@ -107,6 +122,28 @@
   display: flex;
   gap: 12px;
   margin-bottom: 20px;
+}
+
+.form-row label {
+  flex: 1;
+  color: #475148;
+  font-size: 14px;
+}
+
+.form-panel {
+  display: grid;
+  gap: 12px;
+  max-width: 760px;
+  margin-bottom: 20px;
+}
+
+.form-panel.narrow {
+  max-width: 520px;
+}
+
+.textarea {
+  min-height: 90px;
+  resize: vertical;
 }
 
 .card-grid {
@@ -165,6 +202,37 @@
 
 .error {
   color: #b42318;
+}
+
+.preview-image {
+  width: 100%;
+  max-height: 320px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.result-box {
+  max-width: 760px;
+  margin-top: 20px;
+  border: 1px solid #d8e2d1;
+  border-radius: 8px;
+  padding: 16px;
+  background: #ffffff;
+}
+
+.result-status {
+  margin: 0 0 8px;
+  color: #2f7d4f;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.result-card {
+  margin: 12px 0;
+  border-radius: 8px;
+  padding: 12px;
+  background: #eef6eb;
 }
 
 @media (max-width: 800px) {

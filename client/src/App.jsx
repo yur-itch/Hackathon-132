@@ -2,6 +2,7 @@ import { NavLink, Navigate, Route, Routes } from "react-router-dom";
 import CatalogPage from "./pages/CatalogPage.jsx";
 import FavoritesPage from "./pages/FavoritesPage.jsx";
 import MyPlantsPage from "./pages/MyPlantsPage.jsx";
+import RecognizePage from "./pages/RecognizePage.jsx";
 import RemindersPage from "./pages/RemindersPage.jsx";
 import "./App.css";
 
@@ -10,6 +11,7 @@ const menuItems = [
   { to: "/my-plants", label: "Мои растения" },
   { to: "/reminders", label: "Напоминания" },
   { to: "/favorites", label: "Избранное" },
+  { to: "/recognize", label: "Распознать" },
 ];
 
 function getLinkClass({ isActive }) {
@@ -43,6 +45,7 @@ export default function App() {
           <Route path="/my-plants" element={<MyPlantsPage />} />
           <Route path="/reminders" element={<RemindersPage />} />
           <Route path="/favorites" element={<FavoritesPage />} />
+          <Route path="/recognize" element={<RecognizePage />} />
         </Routes>
       </main>
     </div>

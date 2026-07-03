@@ -1,56 +1,66 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/client.js";
 
-const reminderLabels = {
-  Watering: "Полив",
-  Repotting: "Пересадка",
-  Fertilizing: "Подкормка",
-};
+function buildReminders(plants) {
+  return plants.flatMap((plant) => {
+    const items = [];
+
+    if (plant.nextWateringDate) {
+      items.push({
+        id: `${plant.id}-water`,
+        title: "Полив",
+        plantName: plant.plantName,
+        date: plant.nextWateringDate,
+      });
+    }
+
+    if (plant.nextRepottingDate) {
+      items.push({
+        id: `${plant.id}-repot`,
+        title: "Пересадка",
+        plantName: plant.plantName,
+        date: plant.nextRepottingDate,
+      });
+    }
+
+    return items;
+  });
+}
 
 export default function RemindersPage() {
   const [reminders, setReminders] = useState([]);
   const [error, setError] = useState("");
 
-  function loadReminders() {
-    api.reminders
-      .listMine()
-      .then(setReminders)
-      .catch(() => setError("Не удалось загрузить напоминания"));
-  }
-
   useEffect(() => {
-    loadReminders();
+    api.userPlants
+      .listMine()
+      .then((plants) => setReminders(buildReminders(plants)))
+      .catch(() => setError("Не удалось загрузить напоминания"));
   }, []);
 
   return (
     <section>
       <div className="page-title">
         <h1>Напоминания</h1>
-        <p>Список задач по уходу за растениями.</p>
+        <p>Задачи строятся по датам, указанным в личном списке растений.</p>
       </div>
 
       {error && <p className="error">{error}</p>}
 
       <div className="list">
         {reminders.map((reminder) => {
-          const dueDate = new Date(reminder.nextDueAt);
+          const dueDate = new Date(reminder.date);
           const isOverdue = dueDate <= new Date();
 
           return (
             <div className="list-item" key={reminder.id}>
               <div>
-                <h2>{reminderLabels[reminder.type] || reminder.type}</h2>
+                <h2>{reminder.title}</h2>
+                <p className="muted">{reminder.plantName}</p>
                 <p className={isOverdue ? "error" : "muted"}>
                   {isOverdue ? "Пора выполнить" : "Срок"}: {dueDate.toLocaleDateString()}
                 </p>
               </div>
-
-              <button
-                className="button"
-                onClick={() => api.reminders.markDone(reminder.id).then(loadReminders)}
-              >
-                Готово
-              </button>
             </div>
           );
         })}

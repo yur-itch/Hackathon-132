@@ -1,8 +1,17 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/client.js";
 
+function getWateringText(plant) {
+  return plant.wateringRecommendations || `раз в ${plant.wateringFrequencyDays} дней`;
+}
+
+function getLightText(plant) {
+  return plant.lightingRecommendations || plant.light || "не указано";
+}
+
 export default function CatalogPage() {
   const [plants, setPlants] = useState([]);
+  const [favoriteIds, setFavoriteIds] = useState(api.favorites.ids());
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -17,6 +26,16 @@ export default function CatalogPage() {
       .catch(() => setError("Не удалось загрузить растения"))
       .finally(() => setLoading(false));
   }, [search]);
+
+  function toggleFavorite(plantId) {
+    if (favoriteIds.includes(plantId)) {
+      api.favorites.remove(plantId);
+    } else {
+      api.favorites.add(plantId);
+    }
+
+    setFavoriteIds(api.favorites.ids());
+  }
 
   return (
     <section>
@@ -44,10 +63,14 @@ export default function CatalogPage() {
 
             <div className="plant-card-body">
               <h2>{plant.name}</h2>
-              {plant.latinName && <p className="latin-name">{plant.latinName}</p>}
-              <p>Полив: раз в {plant.wateringFrequencyDays} дней</p>
-              <p>Освещение: {plant.light}</p>
-              <p>Сложность: {plant.difficulty}</p>
+              {plant.description && <p className="muted">{plant.description}</p>}
+              <p>Полив: {getWateringText(plant)}</p>
+              <p>Освещение: {getLightText(plant)}</p>
+              <p>{plant.isPoisonous ? "Ядовитое растение" : "Не отмечено как ядовитое"}</p>
+
+              <button className="button button-secondary" onClick={() => toggleFavorite(plant.id)}>
+                {favoriteIds.includes(plant.id) ? "Убрать из избранного" : "В избранное"}
+              </button>
             </div>
           </article>
         ))}
