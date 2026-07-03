@@ -23,8 +23,10 @@ public class AppDbContext : DbContext
         b.Entity<User>().HasIndex(x => x.Email).IsUnique();
         b.Entity<ExchangeOffer>().HasIndex(x => x.OwnerId);
         b.Entity<ChatMessage>().HasIndex(x => x.ExchangeOfferId);
-        b.Entity<PushSubscription>().HasIndex(x => x.OwnerId);
-        b.Entity<PushSubscription>().HasIndex(x => x.Endpoint).IsUnique();
+        // Уникальность по (OwnerId, Endpoint), а не по одному Endpoint: один и тот же
+        // браузер (Endpoint) может быть подписан от лица разных владельцев на общем
+        // устройстве — каждый получает свои уведомления независимо.
+        b.Entity<PushSubscription>().HasIndex(x => new { x.OwnerId, x.Endpoint }).IsUnique();
 
         b.Entity<Reminder>()
             .HasOne(r => r.UserPlant)

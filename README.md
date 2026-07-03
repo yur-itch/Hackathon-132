@@ -32,7 +32,22 @@ dotnet watch --project server/API/API.csproj
 - Swagger/Scalar UI: http://localhost:5071/scalar/v1
 - OpenAPI JSON: http://localhost:5071/openapi/v1.json
 - Схема БД и справочник (`SeedData`) создаются автоматически при первом старте
-  (`Database.EnsureCreated()` — полноценных EF-миграций пока нет).
+  (`Database.EnsureCreated()` — полноценных EF-миграций пока нет). **Важно:** если после
+  `git pull` видите ошибки `column/relation does not exist` — значит в моделях появились
+  новые таблицы/колонки, а `EnsureCreated()` их в уже существующую БД не добавляет.
+  Лечится сносом локального volume: `docker compose down -v && docker compose up -d db`.
+- Секреты (`Jwt:Secret`, `Vapid:PublicKey`/`PrivateKey`, `PlantNet:ApiKey`) — **не в git**,
+  через user-secrets:
+  ```bash
+  cd server/API
+  dotnet user-secrets init
+  dotnet user-secrets set "Jwt:Secret" "любая случайная строка"
+  dotnet user-secrets set "Vapid:PublicKey" "..."
+  dotnet user-secrets set "Vapid:PrivateKey" "..."
+  ```
+  Без `Jwt:Secret` авторизация не заработает; без VAPID-ключей push тихо не будет отправляться
+  (см. лог). Ключи одной пары VAPID должны быть одинаковыми у всех, кто тестирует push на общем
+  фронте — сгенерировать новую пару можно через `WebPush.VapidHelper.GenerateVapidKeys()`.
 
 **Фронтенд** (порт 5173):
 ```bash
