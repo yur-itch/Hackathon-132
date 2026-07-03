@@ -17,7 +17,7 @@ public interface IAuthService
     Task<(RegisterResult Result, User? User)> RegisterAsync(string email, string password, string displayName);
 
     /// <summary>
-    /// Авторизация пользователя. Возвращает JWT токен.
+    /// Авторизация пользователя. Возвращает JWT токен и данные пользователя.
     /// </summary>
-    Task<string?> LoginAsync(string email, string password);
+    Task<(string? Token, User? User)> LoginAsync(string email, string password);
 }

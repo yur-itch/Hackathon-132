@@ -43,19 +43,19 @@ public class AuthService : IAuthService
         return (RegisterResult.Created, user);
     }
 
-    public async Task<string?> LoginAsync(string email, string password)
+    public async Task<(string? Token, User? User)> LoginAsync(string email, string password)
     {
         if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
-            return null;
+            return (null, null);
 
         var normalizedEmail = email.Trim().ToLowerInvariant();
         var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == normalizedEmail);
-        if (user == null) return null;
+        if (user == null) return (null, null);
 
         var verified = BCrypt.Net.BCrypt.Verify(password, user.PasswordHash);
-        if (!verified) return null;
+        if (!verified) return (null, null);
 
-        return GenerateJwtToken(user);
+        return (GenerateJwtToken(user), user);
     }
 
     private string GenerateJwtToken(User user)

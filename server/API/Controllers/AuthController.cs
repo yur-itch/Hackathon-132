@@ -31,7 +31,7 @@ public sealed class AuthController : ControllerBase
             return BadRequest("Проверьте правильность заполнения полей.");
         }
 
-        var token = await _authService.LoginAsync(dto.Email, dto.Password);
+        var (token, _) = await _authService.LoginAsync(dto.Email, dto.Password);
         if (token is not null)
         {
             Response.Cookies.Append(AccessTokenCookieName, token, CreateAccessTokenCookieOptions());
@@ -41,16 +41,16 @@ public sealed class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
-    public async Task<ActionResult<AuthResponseDto>> Login([FromBody] LoginDto dto)
+    public async Task<ActionResult<UserDto>> Login([FromBody] LoginDto dto)
     {
-        var token = await _authService.LoginAsync(dto.Email, dto.Password);
-        if (token is null)
+        var (token, user) = await _authService.LoginAsync(dto.Email, dto.Password);
+        if (token is null || user is null)
         {
             return Unauthorized("Неверный email или пароль.");
         }
 
         Response.Cookies.Append(AccessTokenCookieName, token, CreateAccessTokenCookieOptions());
-        return Ok(new AuthResponseDto(true));
+        return Ok(new UserDto(user.Id, user.Email, user.DisplayName, user.CreatedAt));
     }
 
     [HttpPost("logout")]

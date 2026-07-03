@@ -18,13 +18,13 @@ export function AuthProvider({ children }) {
   useEffect(refresh, []);
 
   async function login(email, password) {
-    await api.auth.login(email, password);
-    await refresh();
+    const loggedInUser = await api.auth.login(email, password);
+    setUser(loggedInUser);
   }
 
   async function register(email, password, displayName) {
-    await api.auth.register(email, password, displayName);
-    await refresh();
+    const registeredUser = await api.auth.register(email, password, displayName);
+    setUser(registeredUser);
   }
 
   async function logout() {

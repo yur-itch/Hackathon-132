@@ -14,7 +14,6 @@ public record LoginDto(
     [Required(ErrorMessage = "Email обязателен.")] string Email,
     [Required(ErrorMessage = "Пароль обязателен.")] string Password);
 
-public record AuthResponseDto(bool Authenticated);
 public record UserDto(int Id, string Email, string DisplayName, DateTime CreatedAt);
 
 public record UpdateUserDto(
