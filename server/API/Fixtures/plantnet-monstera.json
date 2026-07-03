@@ -1,0 +1,27 @@
+{
+  "results": [
+    {
+      "score": 0.9412,
+      "species": {
+        "scientificNameWithoutAuthor": "Monstera deliciosa",
+        "scientificNameAuthorship": "Liebm.",
+        "scientificName": "Monstera deliciosa Liebm.",
+        "genus": { "scientificNameWithoutAuthor": "Monstera" },
+        "family": { "scientificNameWithoutAuthor": "Araceae" },
+        "commonNames": ["Швейцарский сыр", "Монстера привлекательная"]
+      },
+      "gbif": { "id": "2868241" },
+      "powo": { "id": "84351-1" }
+    },
+    {
+      "score": 0.0231,
+      "species": {
+        "scientificNameWithoutAuthor": "Monstera adansonii",
+        "scientificName": "Monstera adansonii Schott",
+        "commonNames": ["Monstera adansonii"]
+      },
+      "gbif": { "id": "2872769" }
+    }
+  ],
+  "remainingIdentificationRequests": 499
+}
