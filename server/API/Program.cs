@@ -1,6 +1,8 @@
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using PlantCare.Api.Data;
+using PlantCare.Api.Services.Implementations;
+using PlantCare.Api.Services.Interfaces;
 using PlantCare.Api.Services.PlantNet;
 using PlantCare.Api.Services.Recognition;
 using Scalar.AspNetCore;
@@ -26,6 +28,7 @@ builder.Services.Configure<PlantNetOptions>(
 builder.Services.AddHttpClient<IPlantNetClient, PlantNetClient>(c =>
     c.Timeout = TimeSpan.FromSeconds(10));
 builder.Services.AddScoped<IRecognitionService, RecognitionService>();
+builder.Services.AddScoped<IReminderService, ReminderService>();
 
 // CORS: открыто для дев-фронта (Vite на 5173). На проде сузить.
 const string DevCors = "dev";

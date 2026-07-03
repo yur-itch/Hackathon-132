@@ -1,6 +1,6 @@
 // Владелец: Frontend-разработчик №2 (избранное — часть справочника).
 import { useEffect, useState } from "react";
-import { api } from "../api/client";
+import { api } from "../api/apClient";
 import type { Plant } from "../api/types";
 
 export default function FavoritesPage() {

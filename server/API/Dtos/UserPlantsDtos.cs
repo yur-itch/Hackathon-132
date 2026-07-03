@@ -34,13 +34,3 @@ public sealed record UserPlantDto(
     DateTime? NextWateringDate,
     DateTime? NextRepottingDate);
 
-public enum CreateUserPlantResult
-{
-    Created,
-    PlantNotFound,
-    AlreadyExists
-}
-
-public sealed record AddUserPlantResult(
-    CreateUserPlantResult Result,
-    UserPlantDto? UserPlant);

@@ -5,7 +5,7 @@ using PlantCare.Api.Services.Interfaces;
 namespace PlantCare.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/plants")]
 public sealed class PlantsController : ControllerBase
 {
     private readonly IPlantsService _plantsService;

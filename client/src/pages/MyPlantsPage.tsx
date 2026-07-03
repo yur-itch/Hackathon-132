@@ -1,7 +1,7 @@
 // Владелец: Frontend-разработчик №3 (личная коллекция).
 // Экран: список «моих растений», добавление/удаление.
 import { useEffect, useState } from "react";
-import { api } from "../api/client";
+import { api } from "../apiClient";
 import type { UserPlant } from "../api/types";
 
 export default function MyPlantsPage() {
