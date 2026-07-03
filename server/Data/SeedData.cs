@@ -25,6 +25,7 @@ public static class SeedData
                 Temperature = "18–27 °C",
                 Toxicity = "Токсична для кошек и собак",
                 Difficulty = "easy",
+                GbifId = "2868241", // реальный GBIF id Monstera deliciosa (сверено с ответом Pl@ntNet)
                 ImageUrl = "https://images.unsplash.com/photo-1614594975525-e45190c55d0b"
             },
             new Plant

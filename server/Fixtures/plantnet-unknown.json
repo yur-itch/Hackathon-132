@@ -1,0 +1,14 @@
+{
+  "results": [
+    {
+      "score": 0.7745,
+      "species": {
+        "scientificNameWithoutAuthor": "Ficus benjamina",
+        "scientificName": "Ficus benjamina L.",
+        "commonNames": ["Фикус Бенджамина"]
+      },
+      "gbif": { "id": "5361896" }
+    }
+  ],
+  "remainingIdentificationRequests": 497
+}
