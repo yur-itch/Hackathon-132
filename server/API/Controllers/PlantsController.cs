@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using PlantCare.Api.Dtos;
+using PlantCare.Api.Models;
 using PlantCare.Api.Services.Interfaces;
 
 namespace PlantCare.Api.Controllers;
@@ -15,8 +15,10 @@ public sealed class PlantsController : ControllerBase
         _plantsService = plantsService;
     }
 
+    // Отдаём Plant напрямую (как и остальные read-эндпоинты) — так OpenAPI-схема
+    // совпадает с реальным JSON, который читает фронт.
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyCollection<PlantListItemDto>>> GetPlants(
+    public async Task<ActionResult<IReadOnlyCollection<Plant>>> GetPlants(
         [FromQuery] bool? isPoisonous)
     {
         var plants = await _plantsService.GetPlantsAsync(isPoisonous);
@@ -24,7 +26,7 @@ public sealed class PlantsController : ControllerBase
     }
 
     [HttpGet("{id:int}")]
-    public async Task<ActionResult<PlantDto>> GetPlantById(
+    public async Task<ActionResult<Plant>> GetPlantById(
         int id)
     {
         var plant = await _plantsService.GetPlantByIdAsync(id);
