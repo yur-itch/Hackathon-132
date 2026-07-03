@@ -20,6 +20,8 @@ export default function RecognizePage() {
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
   const [favoriteIds, setFavoriteIds] = useState(api.favorites.ids());
+  const [addStatus, setAddStatus] = useState("idle"); // idle | saving | added
+  const [addError, setAddError] = useState("");
 
   function handleFileChange(selectedFile) {
     setFile(selectedFile);
@@ -36,6 +38,8 @@ export default function RecognizePage() {
     setLoading(true);
     setError("");
     setResult(null);
+    setAddStatus("idle");
+    setAddError("");
 
     try {
       const activeScenario = recognitionMocksEnabled ? scenario : "";
@@ -56,6 +60,23 @@ export default function RecognizePage() {
     }
 
     setFavoriteIds(api.favorites.ids());
+  }
+
+  async function addToMyPlants(plantId) {
+    setAddStatus("saving");
+    setAddError("");
+
+    try {
+      await api.userPlants.create({ plantId });
+      setAddStatus("added");
+    } catch (requestError) {
+      if ((requestError.message || "").includes("already added")) {
+        setAddStatus("added");
+      } else {
+        setAddStatus("idle");
+        setAddError("Не удалось добавить растение в список");
+      }
+    }
   }
 
   return (
@@ -95,6 +116,7 @@ export default function RecognizePage() {
       </div>
 
       {error && <p className="error">{error}</p>}
+      {addError && <p className="error">{addError}</p>}
 
       {result && (
         <div className="result-box">
@@ -105,16 +127,29 @@ export default function RecognizePage() {
             <PlantCard
               plant={result.matchedCard}
               actions={
-                <button
-                  className={
-                    favoriteIds.includes(result.matchedCard.id)
-                      ? "button button-secondary"
-                      : "button"
-                  }
-                  onClick={() => toggleFavorite(result.matchedCard.id)}
-                >
-                  {favoriteIds.includes(result.matchedCard.id) ? "В избранном" : "В избранное"}
-                </button>
+                <>
+                  <button
+                    className="button"
+                    onClick={() => addToMyPlants(result.matchedCard.id)}
+                    disabled={addStatus !== "idle"}
+                  >
+                    {addStatus === "added"
+                      ? "В моём списке ✓"
+                      : addStatus === "saving"
+                        ? "Добавляем…"
+                        : "В мой список"}
+                  </button>
+                  <button
+                    className={
+                      favoriteIds.includes(result.matchedCard.id)
+                        ? "button button-secondary"
+                        : "button"
+                    }
+                    onClick={() => toggleFavorite(result.matchedCard.id)}
+                  >
+                    {favoriteIds.includes(result.matchedCard.id) ? "В избранном" : "В избранное"}
+                  </button>
+                </>
               }
             />
           )}
