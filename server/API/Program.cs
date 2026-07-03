@@ -24,20 +24,6 @@ builder.Services.AddControllers().AddJsonOptions(o =>
 });
 
 builder.Services.AddOpenApi();
-builder.Services.AddScoped<IPlantsService, PlantsService>();
-builder.Services.AddScoped<IUserPlantsService, UserPlantsService>();
-builder.Services.AddScoped<IReminderService, ReminderService>();
-builder.Services.AddScoped<IRecommendationService, RecommendationService>();
-builder.Services.AddScoped<IExchangeService, ExchangeService>();
-builder.Services.AddScoped<IAuthService, AuthService>();
-
-// Распознавание растений по фото (Pl@ntNet). Без ключа работает на фикстурах (мок).
-builder.Services.Configure<PlantNetOptions>(
-    builder.Configuration.GetSection(PlantNetOptions.SectionName));
-builder.Services.AddHttpClient<IPlantNetClient, PlantNetClient>(c =>
-    c.Timeout = TimeSpan.FromSeconds(10));
-builder.Services.AddScoped<IRecognitionService, RecognitionService>();
-
 // Регистрация сервисов бизнес-логики Core / DataAccess
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IPlantsService, PlantsService>();
@@ -47,6 +33,13 @@ builder.Services.AddScoped<IExchangeService, ExchangeService>();
 builder.Services.AddScoped<IRecommendationService, RecommendationService>();
 builder.Services.AddScoped<IFavoritesService, FavoritesService>();
 builder.Services.AddHostedService<ReminderBackgroundService>();
+
+// Распознавание растений по фото (Pl@ntNet). Без ключа работает на фикстурах (мок).
+builder.Services.Configure<PlantNetOptions>(
+    builder.Configuration.GetSection(PlantNetOptions.SectionName));
+builder.Services.AddHttpClient<IPlantNetClient, PlantNetClient>(c =>
+    c.Timeout = TimeSpan.FromSeconds(10));
+builder.Services.AddScoped<IRecognitionService, RecognitionService>();
 
 // CORS: открыто для дев-фронта (Vite на 5173). На проде сузить.
 const string DevCors = "dev";
