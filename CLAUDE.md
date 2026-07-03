@@ -32,9 +32,13 @@ PlantCare — помощник по уходу за растениями (хак
 - Стили — только Tailwind-классы. Никаких отдельных CSS-файлов на компонент.
 - Одна страница = один файл в `client/src/pages/`. Роуты — в `App.tsx`.
 
-## Проверка перед коммитом
-- Бэк: `cd server && dotnet build` — 0 ошибок.
-- Фронт: `cd client && npm run build` — проходит tsc + vite.
+## Команды запуска и проверки
+- Запуск БД (PostgreSQL): `docker-compose up -d`
+- Запуск бэкенда в режиме разработки (с Hot Reload): `dotnet watch --project server/API/API.csproj`
+- Запуск бэкенда обычный: `dotnet run --project server/API/API.csproj`
+- Проверка сборки бэкенда: `dotnet build server/API/API.csproj`
+- Запуск фронтенда: `cd client && npm run dev`
+- Сборка фронтенда: `cd client && npm run build`
 
 ## Чего НЕ делаем
 - Не пишем свой ML для распознавания фото — только внешний API.

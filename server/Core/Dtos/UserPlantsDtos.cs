@@ -33,3 +33,14 @@ public sealed record UserPlantDto(
     string? Note,
     DateTime? NextWateringDate,
     DateTime? NextRepottingDate);
+
+public enum CreateUserPlantResult
+{
+    Created,
+    PlantNotFound,
+    AlreadyExists
+}
+
+public sealed record AddUserPlantResult(
+    CreateUserPlantResult Result,
+    UserPlantDto? UserPlant);

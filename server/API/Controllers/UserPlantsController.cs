@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using PlantCare.Api.Dtos;
+using PlantCare.Api.Services.Interfaces;
 
 namespace PlantCare.Api.Controllers;
 
