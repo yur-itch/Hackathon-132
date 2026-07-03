@@ -2,6 +2,9 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MIN_PASSWORD_LENGTH = 8;
+
 export default function AuthPage() {
   const { login, register } = useAuth();
   const navigate = useNavigate();
@@ -13,15 +16,39 @@ export default function AuthPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function submit() {
+  function validate() {
+    if (!EMAIL_RE.test(email.trim())) {
+      return "Некорректный email.";
+    }
+
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      return `Пароль должен быть не короче ${MIN_PASSWORD_LENGTH} символов.`;
+    }
+
+    if (mode === "register" && displayName.trim().length < 2) {
+      return "Имя должно быть не короче 2 символов.";
+    }
+
+    return "";
+  }
+
+  async function submit(event) {
+    event.preventDefault();
+
+    const validationError = validate();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
     setError("");
     setLoading(true);
 
     try {
       if (mode === "login") {
-        await login(email, password);
+        await login(email.trim(), password);
       } else {
-        await register(email, password, displayName);
+        await register(email.trim(), password, displayName.trim());
       }
       navigate("/catalog");
     } catch (requestError) {
@@ -40,13 +67,16 @@ export default function AuthPage() {
         </p>
       </div>
 
-      <div className="form-panel narrow">
+      <form className="form-panel narrow" onSubmit={submit}>
         {mode === "register" && (
           <input
             className="input"
             value={displayName}
             onChange={(event) => setDisplayName(event.target.value)}
             placeholder="Имя"
+            minLength={2}
+            maxLength={100}
+            required
           />
         )}
 
@@ -56,6 +86,7 @@ export default function AuthPage() {
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="Email"
+          required
         />
 
         <input
@@ -63,15 +94,18 @@ export default function AuthPage() {
           type="password"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
-          placeholder="Пароль"
+          placeholder="Пароль (минимум 8 символов)"
+          minLength={MIN_PASSWORD_LENGTH}
+          required
         />
 
-        <button className="button" onClick={submit} disabled={loading || !email || !password}>
+        <button className="button" type="submit" disabled={loading}>
           {loading ? "Подождите…" : mode === "login" ? "Войти" : "Зарегистрироваться"}
         </button>
 
         <button
           className="button button-secondary"
+          type="button"
           onClick={() => {
             setMode(mode === "login" ? "register" : "login");
             setError("");
@@ -79,7 +113,7 @@ export default function AuthPage() {
         >
           {mode === "login" ? "Нет аккаунта? Зарегистрироваться" : "Уже есть аккаунт? Войти"}
         </button>
-      </div>
+      </form>
 
       {error && <p className="error">{error}</p>}
     </section>
