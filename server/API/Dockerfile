@@ -1,5 +1,5 @@
 # Сборка приложения
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS build
 WORKDIR /src
 
 # Копируем проекты и восстанавливаем зависимости
