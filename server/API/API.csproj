@@ -16,4 +16,10 @@
     <PackageReference Include="Scalar.AspNetCore" Version="2.16.9" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\Core\Models\*.cs" Link="Core\Models\%(Filename)%(Extension)" />
+    <Compile Include="..\DataAccess\*.cs" Link="DataAccess\%(Filename)%(Extension)" />
+    <Compile Include="..\DataAccess\Configurations\*.cs" Link="DataAccess\Configurations\%(Filename)%(Extension)" />
+  </ItemGroup>
+
 </Project>
