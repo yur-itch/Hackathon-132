@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PlantCare.Api.Dtos;
 using PlantCare.Api.Models;
@@ -6,6 +7,7 @@ using PlantCare.Api.Services.Interfaces;
 namespace PlantCare.Api.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/exchange")]
 public sealed class ExchangeController : ControllerBase
 {
@@ -17,6 +19,7 @@ public sealed class ExchangeController : ControllerBase
     }
 
     [HttpGet("offers")]
+    [AllowAnonymous]
     public async Task<ActionResult<IReadOnlyCollection<ExchangeOfferDto>>> GetOffers()
     {
         var offers = await _exchangeService.GetActiveOffersAsync();
@@ -24,6 +27,7 @@ public sealed class ExchangeController : ControllerBase
     }
 
     [HttpGet("offers/{id:guid}")]
+    [AllowAnonymous]
     public async Task<ActionResult<ExchangeOfferDto>> GetOfferById(Guid id)
     {
         var offer = await _exchangeService.GetOfferByIdAsync(id);
