@@ -21,14 +21,14 @@ public class AuthService : IAuthService
         _config = config;
     }
 
-    public async Task<User?> RegisterAsync(string email, string password, string displayName)
+    public async Task<(RegisterResult Result, User? User)> RegisterAsync(string email, string password, string displayName)
     {
         if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password) || string.IsNullOrWhiteSpace(displayName))
-            return null;
+            return (RegisterResult.InvalidInput, null);
 
         var normalizedEmail = email.Trim().ToLowerInvariant();
         var exists = await _db.Users.AnyAsync(u => u.Email == normalizedEmail);
-        if (exists) return null;
+        if (exists) return (RegisterResult.EmailAlreadyExists, null);
 
         var user = new User
         {
@@ -40,7 +40,7 @@ public class AuthService : IAuthService
 
         _db.Users.Add(user);
         await _db.SaveChangesAsync();
-        return user;
+        return (RegisterResult.Created, user);
     }
 
     public async Task<string?> LoginAsync(string email, string password)

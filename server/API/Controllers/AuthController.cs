@@ -21,10 +21,14 @@ public sealed class AuthController : ControllerBase
     [HttpPost("register")]
     public async Task<ActionResult<UserDto>> Register([FromBody] RegisterDto dto)
     {
-        var user = await _authService.RegisterAsync(dto.Email, dto.Password, dto.DisplayName);
-        if (user is null)
+        var (result, user) = await _authService.RegisterAsync(dto.Email, dto.Password, dto.DisplayName);
+        if (result == RegisterResult.EmailAlreadyExists)
         {
-            return BadRequest("Registration failed.");
+            return Conflict("Пользователь с таким email уже зарегистрирован.");
+        }
+        if (result != RegisterResult.Created || user is null)
+        {
+            return BadRequest("Проверьте правильность заполнения полей.");
         }
 
         var token = await _authService.LoginAsync(dto.Email, dto.Password);
@@ -42,7 +46,7 @@ public sealed class AuthController : ControllerBase
         var token = await _authService.LoginAsync(dto.Email, dto.Password);
         if (token is null)
         {
-            return Unauthorized("Invalid email or password.");
+            return Unauthorized("Неверный email или пароль.");
         }
 
         Response.Cookies.Append(AccessTokenCookieName, token, CreateAccessTokenCookieOptions());
