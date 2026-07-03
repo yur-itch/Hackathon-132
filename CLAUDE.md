@@ -7,7 +7,7 @@
 PlantCare — помощник по уходу за растениями (хакатон). Подробности в [README.md](README.md).
 
 ## Структура
-- `server/` — ASP.NET Core 10 Web API + EF Core (SQLite). Порт **5071**.
+- `server/` — ASP.NET Core 10 Web API + EF Core (PostgreSQL) + Layered Structure (Services, Entities, Dtos, Data, Controllers). Порт **5071** (или в Docker).
 - `client/` — React + Vite + TS + Tailwind v4. Порт **5173**.
 
 ## Железные правила
@@ -20,11 +20,11 @@ PlantCare — помощник по уходу за растениями (хак
    Не хардкодь пользователя, бери из этого механизма.
 
 ## Бэкенд-стиль
-- Контроллеры тонкие: валидация + работа через `AppDbContext`, без бизнес-слоёв (хакатон).
-- Ответы: модели напрямую на чтение, DTO из `Dtos/` на запись.
+- Используем структуру папок: `Entities/` (вместо `Models/`), `Services/` (бизнес-логика), `Dtos/` (запросы/ответы), `Data/` (контекст БД и миграции), `Controllers/` (тонкие API-эндпоинты).
+- Работа с базой данных происходит через **Services** (Сервисы), контроллеры инжектируют интерфейсы сервисов, а не `AppDbContext` напрямую.
+- Ответы контроллеров: сущности/модели напрямую или Dtos (для записи).
 - Enum'ы сериализуются строками (`"Watering"`). Циклы ссылок отключены (`IgnoreCycles`).
-- БД пересоздаётся через `EnsureCreated()` + `SeedData`. Хочешь новую схему на старте —
-  удали `server/plantcare.db`, он пересоздастся.
+- База данных: PostgreSQL. Запуск проекта локально или через Docker (`docker-compose up -d --build`). При изменениях схемы БД создавайте миграции: `dotnet ef migrations add <Name>`.
 
 ## Фронтенд-стиль
 - Все запросы — через `client/src/api/client.ts` (`api.plants`, `api.userPlants`, ...).

@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: plantcare-db
+    restart: always
+    environment:
+      POSTGRES_DB: plantcare
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  web:
+    image: plantcare-api
+    container_name: plantcare-api-web
+    build:
+      context: ./server
+      dockerfile: API/Dockerfile
+    restart: always
+    ports:
+      - "5071:5071"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__Default=Host=db;Port=5432;Database=plantcare;Username=postgres;Password=postgres
+    depends_on:
+      - db
+
+volumes:
+  pgdata:
