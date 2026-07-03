@@ -14,6 +14,20 @@ import {
   updateUserPlant,
 } from "./userPlantsApi.js";
 
+const FAVORITES_KEY = "favoritePlantIds";
+
+function readFavoriteIds() {
+  try {
+    return JSON.parse(localStorage.getItem(FAVORITES_KEY)) || [];
+  } catch {
+    return [];
+  }
+}
+
+function saveFavoriteIds(ids) {
+  localStorage.setItem(FAVORITES_KEY, JSON.stringify(ids));
+}
+
 export const api = {
   plants: {
     list: getPlants,
@@ -29,8 +43,20 @@ export const api = {
 
   favorites: {
     listMine: getFavorites,
-    add: addFavorite,
-    remove: deleteFavorite,
+    add(plantId) {
+      const ids = readFavoriteIds();
+
+      if (!ids.includes(plantId)) {
+        saveFavoriteIds([...ids, plantId]);
+      }
+
+      return addFavorite(plantId).catch(() => null);
+    },
+    remove(plantId) {
+      saveFavoriteIds(readFavoriteIds().filter((id) => id !== plantId));
+      return deleteFavorite(plantId).catch(() => null);
+    },
+    ids: readFavoriteIds,
   },
 
   reminders: {
