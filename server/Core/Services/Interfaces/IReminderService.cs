@@ -14,7 +14,7 @@ public interface IReminderService
     /// </summary>
     Task<Reminder?> CreateAsync(
         string ownerId, 
-        int userPlantId, 
+        Guid userPlantId, 
         ReminderType type, 
         int intervalDays, 
         DateTime? nextDueAt);
@@ -24,17 +24,17 @@ public interface IReminderService
     /// </summary>
     Task<bool> UpdateAsync(
         string ownerId, 
-        int id, 
+        Guid id, 
         int intervalDays, 
         bool enabled);
 
     /// <summary>
     /// Отметить напоминание выполненным (сдвигает NextDueAt на IntervalDays вперед).
     /// </summary>
-    Task<bool> MarkDoneAsync(int id, string ownerId);
+    Task<bool> MarkDoneAsync(Guid id, string ownerId);
 
     /// <summary>
     /// Удалить напоминание.
     /// </summary>
-    Task<bool> DeleteAsync(int id, string ownerId);
+    Task<bool> DeleteAsync(Guid id, string ownerId);
 }

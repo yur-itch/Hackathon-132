@@ -14,9 +14,9 @@ public enum ReminderType
 /// </summary>
 public class Reminder
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; } = Guid.NewGuid();
 
-    public int UserPlantId { get; set; }
+    public Guid UserPlantId { get; set; }
     [JsonIgnore]
     public UserPlant? UserPlant { get; set; }
 

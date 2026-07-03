@@ -9,7 +9,7 @@ namespace PlantCare.Api.Models;
 /// </summary>
 public class UserPlant
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; } = Guid.NewGuid();
 
     public string OwnerId { get; set; } = "local";
 

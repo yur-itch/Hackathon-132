@@ -31,7 +31,7 @@ public interface IUserPlantsService
     /// </summary>
     Task<UserPlant?> UpdateUserPlantAsync(
         string ownerId, 
-        int id, 
+        Guid id, 
         string? note, 
         DateTime? nextWateringDate, 
         DateTime? nextRepottingDate);
@@ -39,5 +39,5 @@ public interface IUserPlantsService
     /// <summary>
     /// Удалить растение из коллекции.
     /// </summary>
-    Task<bool> DeleteUserPlantAsync(string ownerId, int id);
+    Task<bool> DeleteUserPlantAsync(string ownerId, Guid id);
 }

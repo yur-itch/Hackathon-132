@@ -12,7 +12,7 @@ public interface IExchangeService
         string title, 
         string description, 
         string wantedPlantDescription, 
-        int? userPlantId);
+        Guid? userPlantId);
 
     /// <summary>
     /// Получить список всех активных предложений обмена (с возможностью текстового поиска).
@@ -22,19 +22,19 @@ public interface IExchangeService
     /// <summary>
     /// Получить подробную информацию об объявлении по его ID.
     /// </summary>
-    Task<ExchangeOffer?> GetOfferByIdAsync(int id);
+    Task<ExchangeOffer?> GetOfferByIdAsync(Guid id);
 
     /// <summary>
     /// Закрыть объявление обмена (сделать неактивным).
     /// </summary>
-    Task<bool> CloseOfferAsync(int id, string ownerId);
+    Task<bool> CloseOfferAsync(Guid id, string ownerId);
 
     /// <summary>
     /// Отправить сообщение в чат по конкретному обмену.
     /// </summary>
     Task<ChatMessage?> SendMessageAsync(
         string senderId, 
-        int exchangeOfferId, 
+        Guid exchangeOfferId, 
         string receiverId, 
         string text);
 
@@ -42,7 +42,7 @@ public interface IExchangeService
     /// Получить историю переписки между текущим пользователем и другим участником по конкретному объявлению обмена.
     /// </summary>
     Task<IEnumerable<ChatMessage>> GetChatMessagesAsync(
-        int exchangeOfferId, 
+        Guid exchangeOfferId, 
         string otherUserId, 
         string currentUserId);
 

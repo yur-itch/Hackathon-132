@@ -5,10 +5,10 @@ namespace PlantCare.Api.Models;
 /// </summary>
 public class ChatMessage
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; } = Guid.NewGuid();
 
     // ID предложения обмена, по которому ведется переписка
-    public int ExchangeOfferId { get; set; }
+    public Guid ExchangeOfferId { get; set; }
     public ExchangeOffer? ExchangeOffer { get; set; }
 
     // ID отправителя сообщения
