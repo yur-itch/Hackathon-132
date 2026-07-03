@@ -18,6 +18,7 @@ secrets.json
 
 # --- env / IDE ---
 .env.local
+.claude/settings.local.json
 .vs/
 .idea/
 .vscode/
