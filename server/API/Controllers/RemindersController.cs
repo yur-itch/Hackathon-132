@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PlantCare.Api.Dtos;
 using PlantCare.Api.Services.Interfaces;
@@ -5,6 +7,7 @@ using PlantCare.Api.Services.Interfaces;
 namespace PlantCare.Api.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/reminders")]
 public sealed class RemindersController : ControllerBase
 {
@@ -86,7 +89,6 @@ public sealed class RemindersController : ControllerBase
     }
 
     private string GetOwnerId()
-        => Request.Headers.TryGetValue("X-User-Id", out var value) && !string.IsNullOrWhiteSpace(value)
-            ? value.ToString()
-            : "local";
+        => User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? throw new InvalidOperationException("Authenticated user id claim is missing.");
 }
