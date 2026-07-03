@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PlantCare.Api.Dtos;
 using PlantCare.Api.Models;
@@ -6,6 +7,7 @@ using PlantCare.Api.Services.Interfaces;
 namespace PlantCare.Api.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/user-plants")]
 public sealed class UserPlantsController : ControllerBase
 {

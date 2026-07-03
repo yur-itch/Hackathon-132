@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PlantCare.Api.Models;
 using PlantCare.Api.Services.Interfaces;
@@ -5,6 +6,7 @@ using PlantCare.Api.Services.Interfaces;
 namespace PlantCare.Api.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/favorites")]
 public sealed class FavoritesController : ControllerBase
 {
