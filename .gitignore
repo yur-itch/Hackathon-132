@@ -17,6 +17,7 @@ api_key.txt
 secrets.json
 
 # --- env / IDE ---
+/.env
 .env.local
 .claude/settings.local.json
 .vs/

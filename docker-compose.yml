@@ -33,6 +33,14 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__Default=Host=db;Port=5432;Database=plantcare;Username=postgres;Password=postgres
+      # user-secrets живут в профиле хоста и НЕ видны внутри контейнера — без этих
+      # переменных PlantNetClient молча уходит в мок (ApiKey пустой) и всегда отвечает
+      # фикстурой 'monstera', что бы ни было на фото. Значения — из корневого .env
+      # (см. .env.example), сам .env в git не коммитим.
+      - PlantNet__ApiKey=${PLANTNET_API_KEY:-}
+      - Jwt__Secret=${JWT_SECRET:-}
+      - Vapid__PublicKey=${VAPID_PUBLIC_KEY:-}
+      - Vapid__PrivateKey=${VAPID_PRIVATE_KEY:-}
     depends_on:
       db:
         condition: service_healthy

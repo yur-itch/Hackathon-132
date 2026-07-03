@@ -30,7 +30,19 @@ public class PlantNetClient : IPlantNetClient
         Stream image, string fileName, string organ, string? scenario, CancellationToken ct)
     {
         if (UseMock)
+        {
+            // Отсутствующий ключ — это не то же самое, что осознанный демо-мок
+            // (UseMock=true): без ключа результат подменяется фикстурой незаметно
+            // для того, кто ждёт реального распознавания. Предупреждаем громче.
+            if (string.IsNullOrWhiteSpace(_opts.ApiKey))
+            {
+                _log.LogWarning(
+                    "PlantNet:ApiKey не задан — распознавание работает на фикстурах, " +
+                    "реальные фото не отправляются в Pl@ntNet.");
+            }
+
             return await LoadFixtureAsync(scenario, ct);
+        }
 
         var url = $"{_opts.BaseUrl}/{_opts.Project}?api-key={_opts.ApiKey}";
 
