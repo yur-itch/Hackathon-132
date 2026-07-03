@@ -55,9 +55,16 @@ public class ReminderBackgroundService : BackgroundService
 
         if (dueReminders.Count == 0) return;
 
-        _logger.LogInformation("Found {Count} due reminders for care operations.", dueReminders.Count);
+        // Уже уведомляли именно про этот NextDueAt — не шлём повторно. Как только
+        // NextDueAt сдвинется вперёд (после /done или ручного обновления даты),
+        // NotifiedAt < NextDueAt снова станет true, и напоминание сможет уведомить заново.
+        var toNotify = dueReminders.Where(r => r.NotifiedAt is null || r.NotifiedAt < r.NextDueAt).ToList();
 
-        foreach (var r in dueReminders)
+        _logger.LogInformation(
+            "Found {Count} due reminders for care operations ({NewCount} not yet notified).",
+            dueReminders.Count, toNotify.Count);
+
+        foreach (var r in toNotify)
         {
             var plantName = r.UserPlant?.Nickname ?? "растение";
             var (title, body) = r.Type switch
@@ -75,6 +82,10 @@ public class ReminderBackgroundService : BackgroundService
             {
                 await push.NotifyOwnerAsync(r.UserPlant.OwnerId, title, body, stoppingToken);
             }
+
+            r.NotifiedAt = now;
         }
+
+        await db.SaveChangesAsync(stoppingToken);
     }
 }

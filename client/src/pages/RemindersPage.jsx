@@ -14,6 +14,7 @@ function buildReminders(plants) {
     if (plant.nextWateringDate) {
       items.push({
         id: `${plant.id}-water`,
+        reminderId: plant.wateringReminderId,
         title: "Полив",
         plantName: plant.plantName,
         date: plant.nextWateringDate,
@@ -23,6 +24,7 @@ function buildReminders(plants) {
     if (plant.nextRepottingDate) {
       items.push({
         id: `${plant.id}-repot`,
+        reminderId: plant.repottingReminderId,
         title: "Пересадка",
         plantName: plant.plantName,
         date: plant.nextRepottingDate,
@@ -86,13 +88,30 @@ function PushToggle() {
 export default function RemindersPage() {
   const [reminders, setReminders] = useState([]);
   const [error, setError] = useState("");
+  const [doneId, setDoneId] = useState(null);
 
-  useEffect(() => {
+  function load() {
     api.userPlants
       .listMine()
       .then((plants) => setReminders(buildReminders(plants)))
       .catch(() => setError("Не удалось загрузить напоминания"));
-  }, []);
+  }
+
+  useEffect(load, []);
+
+  async function markDone(reminderId) {
+    setDoneId(reminderId);
+    setError("");
+
+    try {
+      await api.reminders.markDone(reminderId);
+      load();
+    } catch {
+      setError("Не удалось отметить напоминание выполненным");
+    } finally {
+      setDoneId(null);
+    }
+  }
 
   return (
     <section>
@@ -119,6 +138,16 @@ export default function RemindersPage() {
                   {isOverdue ? "Пора выполнить" : "Срок"}: {dueDate.toLocaleDateString()}
                 </p>
               </div>
+
+              {reminder.reminderId && (
+                <button
+                  className="button"
+                  onClick={() => markDone(reminder.reminderId)}
+                  disabled={doneId === reminder.reminderId}
+                >
+                  {doneId === reminder.reminderId ? "Подождите…" : "Готово"}
+                </button>
+              )}
             </div>
           );
         })}

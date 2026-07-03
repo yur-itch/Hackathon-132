@@ -25,4 +25,9 @@ public class Reminder
     public DateTime NextDueAt { get; set; }
     public DateTime? LastDoneAt { get; set; }
     public bool Enabled { get; set; } = true;
+
+    // Когда последний раз реально отправили push по этому NextDueAt — чтобы не
+    // слать одно и то же напоминание повторно на каждой проверке фонового сервиса.
+    [JsonIgnore]
+    public DateTime? NotifiedAt { get; set; }
 }
