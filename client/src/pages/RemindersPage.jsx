@@ -143,7 +143,8 @@ export default function RemindersPage() {
                 <button
                   className="button"
                   onClick={() => markDone(reminder.reminderId)}
-                  disabled={doneId === reminder.reminderId}
+                  disabled={doneId === reminder.reminderId || !isOverdue}
+                  title={isOverdue ? undefined : "Срок ещё не наступил"}
                 >
                   {doneId === reminder.reminderId ? "Подождите…" : "Готово"}
                 </button>
