@@ -1,6 +1,8 @@
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using PlantCare.Api.Data;
+using PlantCare.Api.Services.Implementations;
+using PlantCare.Api.Services.Interfaces;
 using PlantCare.Api.Services.PlantNet;
 using PlantCare.Api.Services.Recognition;
 using Scalar.AspNetCore;
@@ -19,6 +21,12 @@ builder.Services.AddControllers().AddJsonOptions(o =>
 });
 
 builder.Services.AddOpenApi();
+builder.Services.AddScoped<IPlantsService, PlantsService>();
+builder.Services.AddScoped<IUserPlantsService, UserPlantsService>();
+builder.Services.AddScoped<IReminderService, ReminderService>();
+builder.Services.AddScoped<IRecommendationService, RecommendationService>();
+builder.Services.AddScoped<IExchangeService, ExchangeService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 // Распознавание растений по фото (Pl@ntNet). Без ключа работает на фикстурах (мок).
 builder.Services.Configure<PlantNetOptions>(
@@ -30,7 +38,7 @@ builder.Services.AddScoped<IRecognitionService, RecognitionService>();
 // CORS: открыто для дев-фронта (Vite на 5173). На проде сузить.
 const string DevCors = "dev";
 builder.Services.AddCors(o => o.AddPolicy(DevCors, p =>
-    p.WithOrigins("http://localhost:5173")
+    p.WithOrigins("http://localhost:5173", "http://127.0.0.1:5173")
      .AllowAnyHeader()
      .AllowAnyMethod()));
 

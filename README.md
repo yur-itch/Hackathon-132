@@ -6,7 +6,7 @@
 
 | Слой | Технологии |
 |------|-----------|
-| Frontend | React 19 + Vite + TypeScript + Tailwind v4 + React Router |
+| Frontend | React 19 + Vite + JavaScript + CSS + React Router |
 | Backend | ASP.NET Core 10 Web API + EF Core |
 | БД | SQLite (старт) → PostgreSQL (переключается заменой провайдера) |
 | Контракт | OpenAPI (`/openapi/v1.json`) + Scalar UI (`/scalar/v1`) |
@@ -37,8 +37,7 @@ npm run dev
 ## Архитектура и контракт
 
 Единый источник правды по API — **OpenAPI-схема бэка**. Фронт зеркалит её в
-[`client/src/api/types.ts`](client/src/api/types.ts). При изменении бэка обновляйте типы
-(вручную или сгенерируйте из `/openapi/v1.json`, напр. `npx openapi-typescript`).
+[`client/src/api/client.js`](client/src/api/client.js). При изменении бэка обновляйте JS-клиент.
 
 Идентификация пользователя в базовой версии — заголовок `X-User-Id`
 (по умолчанию `"local"`, без аккаунтов). Усложнение «авторизация» подставит реальный id.
@@ -59,8 +58,8 @@ npm run dev
 | Кто | Зона | Основные файлы |
 |-----|------|----------------|
 | **1. Backend + БД** | схема, эндпоинты, сид, деплой | `server/**` |
-| **2. Frontend — справочник** | app shell, каталог, карточка, избранное | `client/src/App.tsx`, `pages/CatalogPage.tsx`, `pages/FavoritesPage.tsx` |
-| **3. Frontend — коллекция** | «мои растения», напоминания, уведомления | `pages/MyPlantsPage.tsx`, `pages/RemindersPage.tsx` |
+| **2. Frontend — справочник** | app shell, каталог, карточка, избранное | `client/src/App.jsx`, `pages/CatalogPage.jsx`, `pages/FavoritesPage.jsx` |
+| **3. Frontend — коллекция** | «мои растения», напоминания, уведомления | `pages/MyPlantsPage.jsx`, `pages/RemindersPage.jsx` |
 | **4. Full-stack — усложнения** | авторизация → фото → рекомендации → обмен+чат | новые модули, флаги фич |
 
 ## Распознавание растений по фото (Pl@ntNet)
