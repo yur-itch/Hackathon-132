@@ -1,78 +1,63 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using PlantCare.Api.Data;
 using PlantCare.Api.Dtos;
-using PlantCare.Api.Models;
 
 namespace PlantCare.Api.Controllers;
 
-/// <summary>Личная коллекция растений пользователя.</summary>
 [ApiController]
-[Route("api/[controller]")]
-public class UserPlantsController : ControllerBase
+[Route("api/user-plants")]
+public sealed class UserPlantsController : ControllerBase
 {
-    private readonly AppDbContext _db;
-    public UserPlantsController(AppDbContext db) => _db = db;
+    private readonly IUserPlantsService _userPlantsService;
 
-    // В базовой версии владелец берётся из заголовка X-User-Id (по умолчанию "local").
-    // Усложнение «авторизация» заменит это на id из токена.
-    private string OwnerId =>
-        Request.Headers.TryGetValue("X-User-Id", out var v) && !string.IsNullOrWhiteSpace(v)
-            ? v.ToString() : "local";
+    public UserPlantsController(IUserPlantsService userPlantsService)
+    {
+        _userPlantsService = userPlantsService;
+    }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<UserPlant>>> GetMine()
-        => await _db.UserPlants
-            .Include(up => up.Plant)
-            .Where(up => up.OwnerId == OwnerId)
-            .OrderByDescending(up => up.AddedAt)
-            .ToListAsync();
-
-    [HttpGet("{id:int}")]
-    public async Task<ActionResult<UserPlant>> GetById(int id)
+    public async Task<ActionResult<IReadOnlyCollection<UserPlantDto>>> GetUserPlants()
     {
-        var up = await _db.UserPlants.Include(x => x.Plant)
-            .FirstOrDefaultAsync(x => x.Id == id && x.OwnerId == OwnerId);
-        return up is null ? NotFound() : up;
+        var userPlants = await _userPlantsService.GetUserPlantsAsync(GetOwnerId());
+        return Ok(userPlants);
     }
 
     [HttpPost]
-    public async Task<ActionResult<UserPlant>> Create(CreateUserPlantDto dto)
+    public async Task<ActionResult<UserPlantDto>> AddUserPlant(
+        [FromBody] CreateUserPlantDto dto)
     {
-        var up = new UserPlant
+        var result = await _userPlantsService.AddUserPlantAsync(GetOwnerId(), dto);
+
+        return result.Result switch
         {
-            OwnerId = OwnerId,
-            PlantId = dto.PlantId,
-            Nickname = dto.Nickname,
-            Location = dto.Location,
-            Notes = dto.Notes
+            CreateUserPlantResult.Created => CreatedAtAction(
+                nameof(GetUserPlants),
+                new { id = result.UserPlant!.Id },
+                result.UserPlant),
+            CreateUserPlantResult.PlantNotFound => NotFound("Plant not found."),
+            CreateUserPlantResult.AlreadyExists => Conflict("Plant is already added to the collection."),
+            _ => BadRequest()
         };
-        _db.UserPlants.Add(up);
-        await _db.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetById), new { id = up.Id }, up);
     }
 
     [HttpPut("{id:int}")]
-    public async Task<IActionResult> Update(int id, UpdateUserPlantDto dto)
+    public async Task<ActionResult<UserPlantDto>> UpdateUserPlant(
+        int id,
+        [FromBody] UpdateUserPlantDto dto)
     {
-        var up = await _db.UserPlants.FirstOrDefaultAsync(x => x.Id == id && x.OwnerId == OwnerId);
-        if (up is null) return NotFound();
-
-        up.Nickname = dto.Nickname;
-        up.Location = dto.Location;
-        up.Notes = dto.Notes;
-        await _db.SaveChangesAsync();
-        return NoContent();
+        var userPlant = await _userPlantsService.UpdateUserPlantAsync(GetOwnerId(), id, dto);
+        return userPlant is null ? NotFound() : Ok(userPlant);
     }
 
     [HttpDelete("{id:int}")]
-    public async Task<IActionResult> Delete(int id)
+    public async Task<IActionResult> DeleteUserPlant(
+        int id)
     {
-        var up = await _db.UserPlants.FirstOrDefaultAsync(x => x.Id == id && x.OwnerId == OwnerId);
-        if (up is null) return NotFound();
-
-        _db.UserPlants.Remove(up);
-        await _db.SaveChangesAsync();
-        return NoContent();
+        var deleted = await _userPlantsService.DeleteUserPlantAsync(GetOwnerId(), id);
+        return deleted ? NoContent() : NotFound();
     }
+
+    private string GetOwnerId()
+        => Request.Headers.TryGetValue("X-User-Id", out var value) && !string.IsNullOrWhiteSpace(value)
+            ? value.ToString()
+            : "local";
 }
