@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using PlantCare.Api.Data;
-using PlantCare.Api.Dtos;
 using PlantCare.Api.Models;
 using PlantCare.Api.Services.Interfaces;
 
@@ -15,15 +14,20 @@ public class ExchangeService : IExchangeService
         _db = db;
     }
 
-    public async Task<ExchangeOffer> CreateOfferAsync(CreateExchangeOfferDto dto, string ownerId)
+    public async Task<ExchangeOffer> CreateOfferAsync(
+        string ownerId, 
+        string title, 
+        string description, 
+        string wantedPlantDescription, 
+        int? userPlantId)
     {
         var offer = new ExchangeOffer
         {
             OwnerId = ownerId,
-            Title = dto.Title,
-            Description = dto.Description,
-            WantedPlantDescription = dto.WantedPlantDescription,
-            UserPlantId = dto.UserPlantId,
+            Title = title,
+            Description = description,
+            WantedPlantDescription = wantedPlantDescription,
+            UserPlantId = userPlantId,
             CreatedAt = DateTime.UtcNow,
             IsActive = true
         };
@@ -77,18 +81,21 @@ public class ExchangeService : IExchangeService
         return true;
     }
 
-    public async Task<ChatMessage?> SendMessageAsync(SendChatMessageDto dto, string senderId)
+    public async Task<ChatMessage?> SendMessageAsync(
+        string senderId, 
+        int exchangeOfferId, 
+        string receiverId, 
+        string text)
     {
-        // Проверяем, что объявление существует
-        var offer = await _db.ExchangeOffers.AnyAsync(o => o.Id == dto.ExchangeOfferId);
-        if (!offer) return null;
+        var offerExists = await _db.ExchangeOffers.AnyAsync(o => o.Id == exchangeOfferId);
+        if (!offerExists) return null;
 
         var message = new ChatMessage
         {
-            ExchangeOfferId = dto.ExchangeOfferId,
+            ExchangeOfferId = exchangeOfferId,
             SenderId = senderId,
-            ReceiverId = dto.ReceiverId,
-            Text = dto.Text,
+            ReceiverId = receiverId,
+            Text = text,
             SentAt = DateTime.UtcNow,
             IsRead = false
         };
@@ -98,7 +105,10 @@ public class ExchangeService : IExchangeService
         return message;
     }
 
-    public async Task<IEnumerable<ChatMessage>> GetChatMessagesAsync(int exchangeOfferId, string otherUserId, string currentUserId)
+    public async Task<IEnumerable<ChatMessage>> GetChatMessagesAsync(
+        int exchangeOfferId, 
+        string otherUserId, 
+        string currentUserId)
     {
         return await _db.ChatMessages
             .Where(m => m.ExchangeOfferId == exchangeOfferId &&
@@ -108,15 +118,13 @@ public class ExchangeService : IExchangeService
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<ChatDto>> GetMyChatsAsync(string currentUserId)
+    public async Task<IEnumerable<(ExchangeOffer Offer, string OtherUserId, string OtherUserDisplayName, ChatMessage LastMessage)>> GetMyChatsAsync(string currentUserId)
     {
-        // 1. Получаем все сообщения пользователя
         var messages = await _db.ChatMessages
             .Include(m => m.ExchangeOffer)
             .Where(m => m.SenderId == currentUserId || m.ReceiverId == currentUserId)
             .ToListAsync();
 
-        // 2. Группируем сообщения по (ExchangeOfferId, Собеседник)
         var chatGroups = messages
             .GroupBy(m => new
             {
@@ -124,14 +132,13 @@ public class ExchangeService : IExchangeService
                 OtherUserId = m.SenderId == currentUserId ? m.ReceiverId : m.SenderId
             });
 
-        var chats = new List<ChatDto>();
+        var chats = new List<(ExchangeOffer Offer, string OtherUserId, string OtherUserDisplayName, ChatMessage LastMessage)>();
 
         foreach (var group in chatGroups)
         {
             var lastMessage = group.OrderByDescending(m => m.SentAt).First();
-            var offerTitle = lastMessage.ExchangeOffer?.Title ?? "Объявление удалено";
+            var offer = lastMessage.ExchangeOffer ?? new ExchangeOffer { Id = group.Key.ExchangeOfferId, Title = "Удаленное объявление" };
 
-            // Ищем отображаемое имя собеседника в БД
             string otherUserDisplayName = "Пользователь";
             if (int.TryParse(group.Key.OtherUserId, out int userId))
             {
@@ -146,16 +153,9 @@ public class ExchangeService : IExchangeService
                 otherUserDisplayName = "Анонимный цветовод";
             }
 
-            chats.Add(new ChatDto(
-                ExchangeOfferId: group.Key.ExchangeOfferId,
-                ExchangeOfferTitle: offerTitle,
-                OtherUserId: group.Key.OtherUserId,
-                OtherUserDisplayName: otherUserDisplayName,
-                LastMessageAt: lastMessage.SentAt,
-                LastMessageText: lastMessage.Text
-            ));
+            chats.Add((offer, group.Key.OtherUserId, otherUserDisplayName, lastMessage));
         }
 
-        return chats.OrderByDescending(c => c.LastMessageAt).ToList();
+        return chats.OrderByDescending(c => c.LastMessage.SentAt).ToList();
     }
 }

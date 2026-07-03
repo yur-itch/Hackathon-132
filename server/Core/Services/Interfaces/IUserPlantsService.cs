@@ -1,23 +1,40 @@
-using PlantCare.Api.Dtos;
+using PlantCare.Api.Models;
 
 namespace PlantCare.Api.Services.Interfaces;
+
+public enum CreateUserPlantResult
+{
+    Created,
+    PlantNotFound,
+    AlreadyExists
+}
 
 public interface IUserPlantsService
 {
     /// <summary>
-    /// Получить список всех растений в коллекции пользователя в формате DTO.
+    /// Получить все растения из личной коллекции пользователя.
     /// </summary>
-    Task<IReadOnlyCollection<UserPlantDto>> GetUserPlantsAsync(string ownerId);
+    Task<IReadOnlyCollection<UserPlant>> GetUserPlantsAsync(string ownerId);
 
     /// <summary>
-    /// Добавить новое растение в коллекцию.
+    /// Добавить растение в коллекцию.
     /// </summary>
-    Task<AddUserPlantResult> AddUserPlantAsync(string ownerId, CreateUserPlantDto dto);
+    Task<(CreateUserPlantResult Result, UserPlant? UserPlant)> AddUserPlantAsync(
+        string ownerId, 
+        int plantId, 
+        string? note, 
+        DateTime? nextWateringDate, 
+        DateTime? nextRepottingDate);
 
     /// <summary>
     /// Обновить параметры растения в коллекции.
     /// </summary>
-    Task<UserPlantDto?> UpdateUserPlantAsync(string ownerId, int id, UpdateUserPlantDto dto);
+    Task<UserPlant?> UpdateUserPlantAsync(
+        string ownerId, 
+        int id, 
+        string? note, 
+        DateTime? nextWateringDate, 
+        DateTime? nextRepottingDate);
 
     /// <summary>
     /// Удалить растение из коллекции.

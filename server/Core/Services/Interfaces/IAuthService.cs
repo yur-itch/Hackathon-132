@@ -1,4 +1,3 @@
-using PlantCare.Api.Dtos;
 using PlantCare.Api.Models;
 
 namespace PlantCare.Api.Services.Interfaces;
@@ -6,12 +5,12 @@ namespace PlantCare.Api.Services.Interfaces;
 public interface IAuthService
 {
     /// <summary>
-    /// Регистрация нового пользователя. Возвращает созданного пользователя или null в случае ошибки.
+    /// Регистрация нового пользователя.
     /// </summary>
-    Task<User?> RegisterAsync(RegisterDto dto);
+    Task<User?> RegisterAsync(string email, string password, string displayName);
 
     /// <summary>
-    /// Авторизация пользователя. Возвращает JWT токен в случае успеха или null в случае неверных учетных данных.
+    /// Авторизация пользователя. Возвращает JWT токен.
     /// </summary>
-    Task<string?> LoginAsync(LoginDto dto);
+    Task<string?> LoginAsync(string email, string password);
 }

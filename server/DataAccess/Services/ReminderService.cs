@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using PlantCare.Api.Data;
-using PlantCare.Api.Dtos;
 using PlantCare.Api.Models;
 using PlantCare.Api.Services.Interfaces;
 
@@ -30,18 +29,22 @@ public class ReminderService : IReminderService
         return await q.OrderBy(r => r.NextDueAt).ToListAsync();
     }
 
-    public async Task<Reminder?> CreateAsync(CreateReminderDto dto, string ownerId)
+    public async Task<Reminder?> CreateAsync(
+        string ownerId, 
+        int userPlantId, 
+        ReminderType type, 
+        int intervalDays, 
+        DateTime? nextDueAt)
     {
-        // Проверяем, что UserPlant существует и принадлежит текущему пользователю
-        var owns = await _db.UserPlants.AnyAsync(x => x.Id == dto.UserPlantId && x.OwnerId == ownerId);
+        var owns = await _db.UserPlants.AnyAsync(x => x.Id == userPlantId && x.OwnerId == ownerId);
         if (!owns) return null;
 
         var r = new Reminder
         {
-            UserPlantId = dto.UserPlantId,
-            Type = dto.Type,
-            IntervalDays = dto.IntervalDays,
-            NextDueAt = dto.NextDueAt ?? DateTime.UtcNow.AddDays(dto.IntervalDays),
+            UserPlantId = userPlantId,
+            Type = type,
+            IntervalDays = intervalDays,
+            NextDueAt = nextDueAt ?? DateTime.UtcNow.AddDays(intervalDays),
             Enabled = true
         };
 
@@ -50,7 +53,11 @@ public class ReminderService : IReminderService
         return r;
     }
 
-    public async Task<bool> UpdateAsync(int id, UpdateReminderDto dto, string ownerId)
+    public async Task<bool> UpdateAsync(
+        string ownerId, 
+        int id, 
+        int intervalDays, 
+        bool enabled)
     {
         var r = await _db.Reminders
             .Include(x => x.UserPlant)
@@ -58,8 +65,8 @@ public class ReminderService : IReminderService
 
         if (r == null) return false;
 
-        r.IntervalDays = dto.IntervalDays;
-        r.Enabled = dto.Enabled;
+        r.IntervalDays = intervalDays;
+        r.Enabled = enabled;
 
         await _db.SaveChangesAsync();
         return true;

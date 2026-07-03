@@ -1,4 +1,4 @@
-using PlantCare.Api.Dtos;
+using PlantCare.Api.Models;
 
 namespace PlantCare.Api.Services.Interfaces;
 
@@ -7,10 +7,10 @@ public interface IPlantsService
     /// <summary>
     /// Получить список растений из справочника с фильтрацией по имени/описанию и ядовитости.
     /// </summary>
-    Task<IReadOnlyCollection<PlantListItemDto>> GetPlantsAsync(string? search, bool? isPoisonous);
+    Task<IReadOnlyCollection<Plant>> GetPlantsAsync(string? search, bool? isPoisonous);
 
     /// <summary>
-    /// Получить полную карточку растения из справочника по его ID.
+    /// Получить растение из справочника по его ID.
     /// </summary>
-    Task<PlantDto?> GetPlantByIdAsync(int id);
+    Task<Plant?> GetPlantByIdAsync(int id);
 }

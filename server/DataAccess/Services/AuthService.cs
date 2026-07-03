@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using PlantCare.Api.Data;
-using PlantCare.Api.Dtos;
 using PlantCare.Api.Models;
 using PlantCare.Api.Services.Interfaces;
 
@@ -22,20 +21,20 @@ public class AuthService : IAuthService
         _config = config;
     }
 
-    public async Task<User?> RegisterAsync(RegisterDto dto)
+    public async Task<User?> RegisterAsync(string email, string password, string displayName)
     {
-        if (string.IsNullOrWhiteSpace(dto.Email) || string.IsNullOrWhiteSpace(dto.Password) || string.IsNullOrWhiteSpace(dto.DisplayName))
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password) || string.IsNullOrWhiteSpace(displayName))
             return null;
 
-        var normalizedEmail = dto.Email.Trim().ToLowerInvariant();
+        var normalizedEmail = email.Trim().ToLowerInvariant();
         var exists = await _db.Users.AnyAsync(u => u.Email == normalizedEmail);
         if (exists) return null;
 
         var user = new User
         {
             Email = normalizedEmail,
-            DisplayName = dto.DisplayName.Trim(),
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+            DisplayName = displayName.Trim(),
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
             CreatedAt = DateTime.UtcNow
         };
 
@@ -44,16 +43,16 @@ public class AuthService : IAuthService
         return user;
     }
 
-    public async Task<string?> LoginAsync(LoginDto dto)
+    public async Task<string?> LoginAsync(string email, string password)
     {
-        if (string.IsNullOrWhiteSpace(dto.Email) || string.IsNullOrWhiteSpace(dto.Password))
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
             return null;
 
-        var normalizedEmail = dto.Email.Trim().ToLowerInvariant();
+        var normalizedEmail = email.Trim().ToLowerInvariant();
         var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == normalizedEmail);
         if (user == null) return null;
 
-        var verified = BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash);
+        var verified = BCrypt.Net.BCrypt.Verify(password, user.PasswordHash);
         if (!verified) return null;
 
         return GenerateJwtToken(user);
@@ -64,7 +63,7 @@ public class AuthService : IAuthService
         var secret = _config["Jwt:Secret"] ?? "super_secret_key_plantcare_hackathon_2026_antigravity";
         var issuer = _config["Jwt:Issuer"] ?? "PlantCareApi";
         var audience = _config["Jwt:Audience"] ?? "PlantCareClient";
-        var expiryMinutes = double.Parse(_config["Jwt:ExpiryMinutes"] ?? "1440"); // 1 day default
+        var expiryMinutes = double.Parse(_config["Jwt:ExpiryMinutes"] ?? "1440");
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
