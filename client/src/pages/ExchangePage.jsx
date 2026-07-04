@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+import { HubConnectionBuilder } from "@microsoft/signalr";
 import { api } from "../api/client.js";
+import { API_URL } from "../api/apiClient.js";
 import { useAuth } from "../context/AuthContext.jsx";
 
 function ChatPanel({ offer, otherUserId, otherUserDisplayName, myId, onClose, onExchangeConfirmed }) {
@@ -11,24 +13,48 @@ function ChatPanel({ offer, otherUserId, otherUserDisplayName, myId, onClose, on
 
   const isOwner = String(offer.ownerId) === String(myId);
 
-  // silent — для фонового поллинга: не показываем ошибку, если один опрос не удался
-  function load({ silent = false } = {}) {
+  function load() {
     api.exchange
       .getMessages(offer.id, otherUserId)
       .then((data) => {
         setMessages(data);
-        if (!silent) setError("");
+        setError("");
       })
       .catch(() => {
-        if (!silent) setError("Не удалось загрузить переписку");
+        setError("Не удалось загрузить переписку");
       })
       .finally(() => setLoading(false));
   }
 
   useEffect(() => {
     load();
-    const timer = setInterval(() => load({ silent: true }), 4000);
-    return () => clearInterval(timer);
+
+    const connection = new HubConnectionBuilder()
+      .withUrl(`${API_URL}/hubs/chat`)
+      .withAutomaticReconnect()
+      .build();
+
+    connection.on("ReceiveMessage", (newMessage) => {
+      setMessages((prev) => {
+        if (prev.some((m) => m.id === newMessage.id)) {
+          return prev;
+        }
+        return [...prev, newMessage];
+      });
+    });
+
+    connection
+      .start()
+      .then(() => {
+        connection.invoke("JoinChat", offer.id.toString(), otherUserId.toString());
+      })
+      .catch((err) => {
+        console.error("SignalR Connection Error: ", err);
+      });
+
+    return () => {
+      connection.stop();
+    };
   }, [offer.id, otherUserId]);
 
   async function send() {
@@ -38,7 +64,6 @@ function ChatPanel({ offer, otherUserId, otherUserDisplayName, myId, onClose, on
     try {
       await api.exchange.sendMessage(offer.id, { receiverId: otherUserId, text: text.trim() });
       setText("");
-      load();
     } catch {
       setError("Не удалось отправить сообщение");
     }

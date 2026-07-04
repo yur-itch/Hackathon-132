@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:5071";
+export const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:5071";
 // Пока что .env не создавал
 export async function apiRequest(path, options = {}) {
   const response = await fetch(`${API_URL}${path}`, {
