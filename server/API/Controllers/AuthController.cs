@@ -16,7 +16,7 @@ public sealed class AuthController : ControllerBase
     {
         _authService = authService;
         _configuration = configuration;
-    }
+    } 
 
     [HttpPost("register")]
     public async Task<ActionResult<UserDto>> Register([FromBody] RegisterDto dto)
