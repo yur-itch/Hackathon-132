@@ -14,20 +14,36 @@ public class ExchangeService : IExchangeService
         _db = db;
     }
 
-    public async Task<ExchangeOffer> CreateOfferAsync(
-        string ownerId, 
-        string title, 
-        string description, 
-        string wantedPlantDescription, 
-        Guid? userPlantId)
+    public async Task<(CreateOfferResult Result, ExchangeOffer? Offer)> CreateOfferAsync(
+        string ownerId,
+        string title,
+        string? description,
+        int wantedPlantId,
+        Guid userPlantId)
     {
+        // Отдаваемое растение должно существовать и принадлежать создателю объявления
+        var offeredPlant = await _db.UserPlants
+            .Include(up => up.Plant)
+            .FirstOrDefaultAsync(up => up.Id == userPlantId && up.OwnerId == ownerId);
+        if (offeredPlant is null)
+        {
+            return (CreateOfferResult.OfferedPlantNotFound, null);
+        }
+
+        // Желаемое растение должно быть из каталога
+        var wantedPlant = await _db.Plants.FindAsync(wantedPlantId);
+        if (wantedPlant is null)
+        {
+            return (CreateOfferResult.WantedPlantNotFound, null);
+        }
+
         var offer = new ExchangeOffer
         {
             Id = Guid.NewGuid(),
             OwnerId = ownerId,
             Title = title,
-            Description = description,
-            WantedPlantDescription = wantedPlantDescription,
+            Description = description ?? "",
+            WantedPlantId = wantedPlantId,
             UserPlantId = userPlantId,
             CreatedAt = DateTime.UtcNow,
             IsActive = true
@@ -36,14 +52,23 @@ public class ExchangeService : IExchangeService
         _db.ExchangeOffers.Add(offer);
         await _db.SaveChangesAsync();
 
-        if (offer.UserPlantId.HasValue)
-        {
-            offer.UserPlant = await _db.UserPlants
-                .Include(up => up.Plant)
-                .FirstOrDefaultAsync(up => up.Id == offer.UserPlantId.Value);
-        }
+        offer.UserPlant = offeredPlant;
+        offer.WantedPlant = wantedPlant;
+        return (CreateOfferResult.Created, offer);
+    }
 
-        return offer;
+    public async Task<bool> CanUserAccessChatAsync(Guid exchangeOfferId, string userId)
+    {
+        var offer = await _db.ExchangeOffers
+            .FirstOrDefaultAsync(o => o.Id == exchangeOfferId);
+        if (offer is null) return false;
+
+        // Владелец объявления всегда имеет доступ к своим чатам
+        if (offer.OwnerId == userId) return true;
+
+        // Остальные — только если у них есть желаемое растение в коллекции
+        return await _db.UserPlants
+            .AnyAsync(up => up.OwnerId == userId && up.PlantId == offer.WantedPlantId);
     }
 
     public async Task<IEnumerable<ExchangeOffer>> GetActiveOffersAsync()
@@ -51,6 +76,7 @@ public class ExchangeService : IExchangeService
         var q = _db.ExchangeOffers
             .Include(o => o.UserPlant)
             .ThenInclude(up => up!.Plant)
+            .Include(o => o.WantedPlant)
             .Where(o => o.IsActive);
 
         return await q.OrderByDescending(o => o.CreatedAt).ToListAsync();
@@ -61,6 +87,7 @@ public class ExchangeService : IExchangeService
         return await _db.ExchangeOffers
             .Include(o => o.UserPlant)
             .ThenInclude(up => up!.Plant)
+            .Include(o => o.WantedPlant)
             .FirstOrDefaultAsync(o => o.Id == id);
     }
 
@@ -153,87 +180,92 @@ public class ExchangeService : IExchangeService
         return chats.OrderByDescending(c => c.LastMessage.SentAt).ToList();
     }
 
-    public async Task<bool> ConfirmExchangeAsync(Guid exchangeOfferId, string currentUserId, string otherUserId)
+    public async Task<ConfirmExchangeResult> ConfirmExchangeAsync(Guid exchangeOfferId, string currentUserId, string otherUserId)
     {
-        // 1. Находим активное предложение обмена по ID
+        // 1. Активное объявление, владелец = текущий пользователь
         var offer = await _db.ExchangeOffers
             .Include(o => o.UserPlant)
             .ThenInclude(up => up!.Plant)
             .FirstOrDefaultAsync(o => o.Id == exchangeOfferId && o.IsActive);
 
-        if (offer == null) return false;
-
-        // 2. Убеждаемся, что текущий пользователь — владелец объявления
-        if (offer.OwnerId != currentUserId) return false;
-
-        // 3. Убеждаемся, что к объявлению привязано растение
-        if (offer.UserPlantId == null || offer.UserPlant == null) return false;
-
-        var userPlant = offer.UserPlant;
-
-        // 4. Убеждаемся, что растение принадлежит текущему пользователю
-        if (userPlant.OwnerId != currentUserId) return false;
-
-        // 5. Меняем владельца растения на собеседника (нового хозяина)
-        userPlant.OwnerId = otherUserId;
-
-        // 6. Очищаем все напоминания для этого растения
-        var oldReminders = await _db.Reminders
-            .Where(r => r.UserPlantId == userPlant.Id)
-            .ToListAsync();
-        _db.Reminders.RemoveRange(oldReminders);
-
-        // 7. Создаем новые напоминания для нового хозяина на основе каталога растения
-        if (userPlant.Plant != null)
+        if (offer is null || offer.OwnerId != currentUserId)
         {
-            var catalogPlant = userPlant.Plant;
-
-            int wateringInterval = catalogPlant.WateringFrequencyDays > 0 ? catalogPlant.WateringFrequencyDays : 7;
-            var wateringReminder = new Reminder
-            {
-                Id = Guid.NewGuid(),
-                UserPlantId = userPlant.Id,
-                Type = ReminderType.Watering,
-                IntervalDays = wateringInterval,
-                NextDueAt = DateTime.UtcNow.AddDays(wateringInterval),
-                Enabled = true
-            };
-            _db.Reminders.Add(wateringReminder);
-
-            if (catalogPlant.RepottingFrequencyMonths.HasValue && catalogPlant.RepottingFrequencyMonths.Value > 0)
-            {
-                int repottingIntervalDays = catalogPlant.RepottingFrequencyMonths.Value * 30;
-                var repottingReminder = new Reminder
-                {
-                    Id = Guid.NewGuid(),
-                    UserPlantId = userPlant.Id,
-                    Type = ReminderType.Repotting,
-                    IntervalDays = repottingIntervalDays,
-                    NextDueAt = DateTime.UtcNow.AddMonths(catalogPlant.RepottingFrequencyMonths.Value),
-                    Enabled = true
-                };
-                _db.Reminders.Add(repottingReminder);
-            }
-        }
-        else
-        {
-            // Если растение «своё» (не из каталога), создаем базовое напоминание о поливе по умолчанию
-            var wateringReminder = new Reminder
-            {
-                Id = Guid.NewGuid(),
-                UserPlantId = userPlant.Id,
-                Type = ReminderType.Watering,
-                IntervalDays = 7,
-                NextDueAt = DateTime.UtcNow.AddDays(7),
-                Enabled = true
-            };
-            _db.Reminders.Add(wateringReminder);
+            return ConfirmExchangeResult.OfferNotFound;
         }
 
-        // 8. Переводим объявление в неактивный статус (обмен завершен)
+        // 2. Отдаваемое растение всё ещё существует и принадлежит владельцу
+        //    (мог отдать его в другом обмене или удалить из коллекции)
+        var offeredPlant = offer.UserPlant;
+        if (offer.UserPlantId is null || offeredPlant is null || offeredPlant.OwnerId != currentUserId)
+        {
+            return ConfirmExchangeResult.OfferedPlantMissing;
+        }
+
+        // 3. У собеседника всё ещё есть подходящее растение (желаемого вида).
+        //    Если несколько — берём добавленное раньше всех.
+        var responderPlant = await _db.UserPlants
+            .Include(up => up.Plant)
+            .Where(up => up.OwnerId == otherUserId && up.PlantId == offer.WantedPlantId)
+            .OrderBy(up => up.AddedAt)
+            .FirstOrDefaultAsync();
+
+        if (responderPlant is null)
+        {
+            return ConfirmExchangeResult.WantedPlantMissing;
+        }
+
+        // 4. Двусторонняя передача: растения меняются хозяевами
+        offeredPlant.OwnerId = otherUserId;
+        responderPlant.OwnerId = currentUserId;
+
+        // 5. Напоминания пересоздаём для обоих новых хозяев
+        await ResetRemindersForNewOwnerAsync(offeredPlant);
+        await ResetRemindersForNewOwnerAsync(responderPlant);
+
+        // 6. Обмен завершён — объявление закрывается
         offer.IsActive = false;
 
         await _db.SaveChangesAsync();
-        return true;
+        return ConfirmExchangeResult.Confirmed;
+    }
+
+    // Сбрасывает и пересоздаёт напоминания для растения после смены владельца:
+    // интервалы берутся из каталога, а для «своего» растения — дефолт (полив раз в 7 дней).
+    private async Task ResetRemindersForNewOwnerAsync(UserPlant plant)
+    {
+        var oldReminders = await _db.Reminders
+            .Where(r => r.UserPlantId == plant.Id)
+            .ToListAsync();
+        _db.Reminders.RemoveRange(oldReminders);
+
+        var catalogPlant = plant.Plant;
+
+        int wateringInterval = catalogPlant is { WateringFrequencyDays: > 0 }
+            ? catalogPlant.WateringFrequencyDays
+            : 7;
+
+        _db.Reminders.Add(new Reminder
+        {
+            Id = Guid.NewGuid(),
+            UserPlantId = plant.Id,
+            Type = ReminderType.Watering,
+            IntervalDays = wateringInterval,
+            NextDueAt = DateTime.UtcNow.AddDays(wateringInterval),
+            Enabled = true
+        });
+
+        if (catalogPlant?.RepottingFrequencyMonths is > 0)
+        {
+            int months = catalogPlant.RepottingFrequencyMonths.Value;
+            _db.Reminders.Add(new Reminder
+            {
+                Id = Guid.NewGuid(),
+                UserPlantId = plant.Id,
+                Type = ReminderType.Repotting,
+                IntervalDays = months * 30,
+                NextDueAt = DateTime.UtcNow.AddMonths(months),
+                Enabled = true
+            });
+        }
     }
 }

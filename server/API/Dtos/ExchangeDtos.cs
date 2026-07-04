@@ -1,20 +1,28 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace PlantCare.Api.Dtos;
 
 public record CreateExchangeOfferDto(
-    string Title,
-    string Description,
-    string WantedPlantDescription,
-    Guid? UserPlantId);
+    [Required(ErrorMessage = "Укажите название объявления.")] string Title,
+    string? Description,
+    // Растение из каталога, которое хотим получить взамен.
+    [Range(1, int.MaxValue, ErrorMessage = "Выберите растение, которое хотите получить.")] int WantedPlantId,
+    // Растение из своей коллекции, которое отдаём.
+    [Required(ErrorMessage = "Выберите своё растение для обмена.")] Guid UserPlantId);
 
 public record ExchangeOfferDto(
     Guid Id,
     string OwnerId,
     string Title,
-    string Description,
-    string WantedPlantDescription,
+    string? Description,
+    // Что отдаёт владелец (из его коллекции)
     Guid? UserPlantId,
-    string? PlantName,
-    string? PlantImageUrl,
+    string? OfferedPlantName,
+    string? OfferedPlantImageUrl,
+    // Что хочет получить (из каталога) — по нему проверяется право откликнуться
+    int WantedPlantId,
+    string? WantedPlantName,
+    string? WantedPlantImageUrl,
     DateTime CreatedAt,
     bool IsActive);
 

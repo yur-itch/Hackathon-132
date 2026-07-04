@@ -2,17 +2,39 @@ using PlantCare.Api.Models;
 
 namespace PlantCare.Api.Services.Interfaces;
 
+public enum CreateOfferResult
+{
+    Created,
+    OfferedPlantNotFound, // растение не найдено или не принадлежит пользователю
+    WantedPlantNotFound   // желаемого вида нет в каталоге
+}
+
+public enum ConfirmExchangeResult
+{
+    Confirmed,
+    OfferNotFound,        // объявление не найдено/закрыто/не принадлежит пользователю
+    OfferedPlantMissing,  // владелец уже не владеет отдаваемым растением
+    WantedPlantMissing    // у собеседника больше нет нужного растения
+}
+
 public interface IExchangeService
 {
     /// <summary>
-    /// Создать новое предложение обмена.
+    /// Создать новое предложение обмена (двустороннее): отдаём своё растение
+    /// (userPlantId), хотим получить растение из каталога (wantedPlantId).
     /// </summary>
-    Task<ExchangeOffer> CreateOfferAsync(
-        string ownerId, 
-        string title, 
-        string description, 
-        string wantedPlantDescription, 
-        Guid? userPlantId);
+    Task<(CreateOfferResult Result, ExchangeOffer? Offer)> CreateOfferAsync(
+        string ownerId,
+        string title,
+        string? description,
+        int wantedPlantId,
+        Guid userPlantId);
+
+    /// <summary>
+    /// Может ли пользователь зайти в чат по объявлению: владелец — всегда,
+    /// остальные — только если у них в коллекции есть желаемое растение.
+    /// </summary>
+    Task<bool> CanUserAccessChatAsync(Guid exchangeOfferId, string userId);
 
     /// <summary>
     /// Получить список всех активных предложений обмена.
@@ -53,8 +75,9 @@ public interface IExchangeService
     Task<IEnumerable<(ExchangeOffer Offer, string OtherUserId, string OtherUserDisplayName, ChatMessage LastMessage)>> GetMyChatsAsync(string currentUserId);
 
     /// <summary>
-    /// Подтвердить обмен с другим пользователем: передает права владения привязанным UserPlant,
-    /// пересоздает напоминания для нового хозяина и переводит объявление в статус неактивного.
+    /// Подтвердить двусторонний обмен: растение владельца уходит собеседнику, а
+    /// подходящее растение собеседника (совпадающее с желаемым видом) — владельцу.
+    /// Напоминания пересоздаются для обоих новых хозяев, объявление закрывается.
     /// </summary>
-    Task<bool> ConfirmExchangeAsync(Guid exchangeOfferId, string currentUserId, string otherUserId);
+    Task<ConfirmExchangeResult> ConfirmExchangeAsync(Guid exchangeOfferId, string currentUserId, string otherUserId);
 }

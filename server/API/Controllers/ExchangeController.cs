@@ -44,14 +44,22 @@ public sealed class ExchangeController : ControllerBase
     public async Task<ActionResult<ExchangeOfferDto>> CreateOffer(
         [FromBody] CreateExchangeOfferDto dto)
     {
-        var offer = await _exchangeService.CreateOfferAsync(
+        var (result, offer) = await _exchangeService.CreateOfferAsync(
             this.GetOwnerId(),
             dto.Title,
             dto.Description,
-            dto.WantedPlantDescription,
+            dto.WantedPlantId,
             dto.UserPlantId);
 
-        var offerDto = ToDto(offer);
+        switch (result)
+        {
+            case CreateOfferResult.OfferedPlantNotFound:
+                return BadRequest("Выбранное растение не найдено в вашей коллекции.");
+            case CreateOfferResult.WantedPlantNotFound:
+                return BadRequest("Желаемое растение не найдено в справочнике.");
+        }
+
+        var offerDto = ToDto(offer!);
         return CreatedAtAction(nameof(GetOfferById), new { id = offerDto.Id }, offerDto);
     }
 
@@ -67,6 +75,13 @@ public sealed class ExchangeController : ControllerBase
         Guid id,
         [FromBody] SendChatMessageDto dto)
     {
+        // Писать в чат может владелец объявления или тот, у кого есть желаемое растение
+        if (!await _exchangeService.CanUserAccessChatAsync(id, this.GetOwnerId()))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden,
+                "Чтобы участвовать в обмене, нужное растение должно быть в вашей коллекции.");
+        }
+
         var message = await _exchangeService.SendMessageAsync(
             this.GetOwnerId(),
             id,
@@ -92,6 +107,12 @@ public sealed class ExchangeController : ControllerBase
         Guid id,
         [FromQuery] string otherUserId)
     {
+        if (!await _exchangeService.CanUserAccessChatAsync(id, this.GetOwnerId()))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden,
+                "Чтобы участвовать в обмене, нужное растение должно быть в вашей коллекции.");
+        }
+
         var messages = await _exchangeService.GetChatMessagesAsync(
             id,
             otherUserId,
@@ -119,12 +140,19 @@ public sealed class ExchangeController : ControllerBase
         Guid id,
         [FromBody] ConfirmExchangeDto dto)
     {
-        var confirmed = await _exchangeService.ConfirmExchangeAsync(
+        var result = await _exchangeService.ConfirmExchangeAsync(
             id,
             this.GetOwnerId(),
             dto.OtherUserId);
 
-        return confirmed ? NoContent() : NotFound();
+        return result switch
+        {
+            ConfirmExchangeResult.Confirmed => NoContent(),
+            ConfirmExchangeResult.OfferNotFound => NotFound("Объявление не найдено или уже закрыто."),
+            ConfirmExchangeResult.OfferedPlantMissing => Conflict("Вашего растения больше нет в коллекции — обмен невозможен."),
+            ConfirmExchangeResult.WantedPlantMissing => Conflict("У собеседника больше нет нужного растения."),
+            _ => NotFound()
+        };
     }
 
     private static ExchangeOfferDto ToDto(ExchangeOffer offer)
@@ -134,10 +162,12 @@ public sealed class ExchangeController : ControllerBase
             offer.OwnerId,
             offer.Title,
             offer.Description,
-            offer.WantedPlantDescription,
             offer.UserPlantId,
             offer.UserPlant?.Plant?.Name ?? offer.UserPlant?.Nickname,
             offer.UserPlant?.Plant?.ImageUrl,
+            offer.WantedPlantId,
+            offer.WantedPlant?.Name,
+            offer.WantedPlant?.ImageUrl,
             offer.CreatedAt,
             offer.IsActive);
     }

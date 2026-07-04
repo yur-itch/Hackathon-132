@@ -20,8 +20,9 @@ function ChatPanel({ offer, otherUserId, otherUserDisplayName, myId, onClose, on
         setMessages(data);
         setError("");
       })
-      .catch(() => {
-        setError("Не удалось загрузить переписку");
+      .catch((err) => {
+        // 403 приходит с понятным текстом (нет нужного растения в коллекции)
+        setError(err.message || "Не удалось загрузить переписку");
       })
       .finally(() => setLoading(false));
   }
@@ -64,8 +65,8 @@ function ChatPanel({ offer, otherUserId, otherUserDisplayName, myId, onClose, on
     try {
       await api.exchange.sendMessage(offer.id, { receiverId: otherUserId, text: text.trim() });
       setText("");
-    } catch {
-      setError("Не удалось отправить сообщение");
+    } catch (err) {
+      setError(err.message || "Не удалось отправить сообщение");
     }
   }
 
@@ -76,8 +77,9 @@ function ChatPanel({ offer, otherUserId, otherUserDisplayName, myId, onClose, on
     try {
       await api.exchange.confirm(offer.id, { otherUserId });
       onExchangeConfirmed();
-    } catch {
-      setError("Не удалось подтвердить обмен");
+    } catch (err) {
+      // 409 с текстом: у собеседника больше нет растения / своё растение пропало
+      setError(err.message || "Не удалось подтвердить обмен");
     } finally {
       setConfirming(false);
     }
@@ -139,9 +141,14 @@ export default function ExchangePage() {
   const [offers, setOffers] = useState([]);
   const [chats, setChats] = useState([]);
   const [myPlants, setMyPlants] = useState([]);
+  const [catalog, setCatalog] = useState([]);
   const [error, setError] = useState("");
-  const [form, setForm] = useState({ title: "", description: "", wantedPlantDescription: "", userPlantId: "" });
+  const [form, setForm] = useState({ title: "", description: "", wantedPlantId: "", userPlantId: "" });
   const [activeChat, setActiveChat] = useState(null);
+
+  // Каталожные id растений, которые есть у меня в коллекции — по ним решаем,
+  // могу ли я откликнуться на объявление (нужно иметь желаемое растение).
+  const myCatalogPlantIds = new Set(myPlants.map((plant) => plant.plantId));
 
   function loadOffers() {
     api.exchange.listOffers().then(setOffers).catch(() => setError("Не удалось загрузить предложения"));
@@ -155,6 +162,7 @@ export default function ExchangePage() {
     loadOffers();
     loadChats();
     api.userPlants.listMine().then(setMyPlants).catch(() => {});
+    api.plants.list().then(setCatalog).catch(() => {});
   }, []);
 
   function updateField(field, value) {
@@ -162,8 +170,16 @@ export default function ExchangePage() {
   }
 
   async function createOffer() {
-    if (!form.title.trim() || !form.description.trim() || !form.wantedPlantDescription.trim()) {
-      setError("Заполните название, описание и что хотите взамен.");
+    if (!form.title.trim()) {
+      setError("Укажите название объявления.");
+      return;
+    }
+    if (!form.userPlantId) {
+      setError("Выберите своё растение для обмена.");
+      return;
+    }
+    if (!form.wantedPlantId) {
+      setError("Выберите растение, которое хотите получить.");
       return;
     }
 
@@ -173,13 +189,13 @@ export default function ExchangePage() {
       await api.exchange.createOffer({
         title: form.title.trim(),
         description: form.description.trim(),
-        wantedPlantDescription: form.wantedPlantDescription.trim(),
-        userPlantId: form.userPlantId || null,
+        userPlantId: form.userPlantId,
+        wantedPlantId: Number(form.wantedPlantId),
       });
-      setForm({ title: "", description: "", wantedPlantDescription: "", userPlantId: "" });
+      setForm({ title: "", description: "", wantedPlantId: "", userPlantId: "" });
       loadOffers();
-    } catch {
-      setError("Не удалось создать предложение");
+    } catch (err) {
+      setError(err.message || "Не удалось создать предложение");
     }
   }
 
@@ -215,54 +231,85 @@ export default function ExchangePage() {
 
       {error && <p className="error">{error}</p>}
 
-      <div className="form-panel narrow">
-        <input
-          className="input"
-          value={form.title}
-          onChange={(event) => updateField("title", event.target.value)}
-          placeholder="Название предложения"
-        />
-        <textarea
-          className="input textarea"
-          value={form.description}
-          onChange={(event) => updateField("description", event.target.value)}
-          placeholder="Описание растения"
-        />
-        <input
-          className="input"
-          value={form.wantedPlantDescription}
-          onChange={(event) => updateField("wantedPlantDescription", event.target.value)}
-          placeholder="Что хотите получить взамен"
-        />
-        <select
-          className="input"
-          value={form.userPlantId}
-          onChange={(event) => updateField("userPlantId", event.target.value)}
-        >
-          <option value="">Не привязывать к растению из моего списка</option>
-          {myPlants.map((plant) => (
-            <option key={plant.id} value={plant.id}>
-              {plant.plantName}
-            </option>
-          ))}
-        </select>
-        <button className="button" onClick={createOffer}>
-          Разместить предложение
-        </button>
-      </div>
+      {myPlants.length === 0 ? (
+        <p className="muted">
+          Чтобы предложить обмен, добавьте хотя бы одно растение в раздел «Мои растения».
+        </p>
+      ) : (
+        <div className="form-panel narrow">
+          <input
+            className="input"
+            value={form.title}
+            onChange={(event) => updateField("title", event.target.value)}
+            placeholder="Название объявления"
+          />
+          <textarea
+            className="input textarea"
+            value={form.description}
+            onChange={(event) => updateField("description", event.target.value)}
+            placeholder="Описание (состояние растения, детали) — необязательно"
+          />
+
+          <label>
+            Отдаю (из моей коллекции)
+            <select
+              className="input"
+              value={form.userPlantId}
+              onChange={(event) => updateField("userPlantId", event.target.value)}
+            >
+              <option value="">Выберите своё растение</option>
+              {myPlants.map((plant) => (
+                <option key={plant.id} value={plant.id}>
+                  {plant.plantName}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label>
+            Хочу получить (из справочника)
+            <select
+              className="input"
+              value={form.wantedPlantId}
+              onChange={(event) => updateField("wantedPlantId", event.target.value)}
+            >
+              <option value="">Выберите желаемое растение</option>
+              {catalog.map((plant) => (
+                <option key={plant.id} value={plant.id}>
+                  {plant.name}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <button className="button" onClick={createOffer}>
+            Разместить объявление
+          </button>
+        </div>
+      )}
 
       <h2>Активные предложения</h2>
       <div className="list">
         {offers.map((offer) => {
           const isMine = String(offer.ownerId) === String(myId);
+          // Откликнуться можно, только если желаемое растение есть в моей коллекции
+          const canRespond = myCatalogPlantIds.has(offer.wantedPlantId);
 
           return (
             <div className="list-item" key={offer.id}>
               <div>
                 <h2>{offer.title}</h2>
-                {offer.plantName && <p className="latin-name">{offer.plantName}</p>}
-                <p className="muted">{offer.description}</p>
-                <p className="muted">Хочет взамен: {offer.wantedPlantDescription}</p>
+                <p className="muted">
+                  Отдаёт: <strong>{offer.offeredPlantName ?? "—"}</strong>
+                  {" · "}
+                  Хочет получить: <strong>{offer.wantedPlantName ?? "—"}</strong>
+                </p>
+                {offer.description && <p className="muted">{offer.description}</p>}
+                {!isMine && !canRespond && (
+                  <p className="muted">
+                    Чтобы откликнуться, нужно иметь «{offer.wantedPlantName}» в своей коллекции.
+                  </p>
+                )}
               </div>
 
               {isMine ? (
@@ -270,7 +317,12 @@ export default function ExchangePage() {
                   Закрыть
                 </button>
               ) : (
-                <button className="button" onClick={() => openChatWithOwner(offer)}>
+                <button
+                  className="button"
+                  onClick={() => openChatWithOwner(offer)}
+                  disabled={!canRespond}
+                  title={canRespond ? undefined : "Нужно нужное растение в коллекции"}
+                >
                   Написать
                 </button>
               )}

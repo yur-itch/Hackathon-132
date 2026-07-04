@@ -40,6 +40,14 @@ public class AppDbContext : DbContext
             .HasForeignKey(o => o.UserPlantId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        // Желаемое растение — из каталога (сид, не удаляется). Restrict, чтобы
+        // случайное удаление вида не рушило объявления каскадом.
+        b.Entity<ExchangeOffer>()
+            .HasOne(o => o.WantedPlant)
+            .WithMany()
+            .HasForeignKey(o => o.WantedPlantId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         b.Entity<ChatMessage>()
             .HasOne(m => m.ExchangeOffer)
             .WithMany()
