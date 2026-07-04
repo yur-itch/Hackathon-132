@@ -8,6 +8,7 @@ using PlantCare.Api.Data;
 using PlantCare.Api.Services.Background;
 using PlantCare.Api.Services.Implementations;
 using PlantCare.Api.Services.Interfaces;
+using PlantCare.Api.Hubs;
 using PlantCare.Api.Services.PlantNet;
 using PlantCare.Api.Services.Recognition;
 using Scalar.AspNetCore;
@@ -85,6 +86,7 @@ builder.Services.Configure<PlantNetOptions>(
 builder.Services.AddHttpClient<IPlantNetClient, PlantNetClient>(c =>
     c.Timeout = TimeSpan.FromSeconds(10));
 builder.Services.AddScoped<IRecognitionService, RecognitionService>();
+builder.Services.AddSignalR();
 
 const string DevCors = "dev";
 builder.Services.AddCors(o => o.AddPolicy(DevCors, p =>
@@ -124,5 +126,6 @@ app.UseCors(DevCors);
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<ChatHub>("/chatHub");
 
 app.Run();
