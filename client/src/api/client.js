@@ -100,7 +100,7 @@ export const api = {
   },
 
   reminders: {
-    listMine: getReminders,
+    listMine: () => (guestMode ? guestStore.reminders.list() : getReminders()),
     create: createReminder,
     update: updateReminder,
     markDone: (id) => (guestMode ? guestStore.reminders.markDone(id) : markReminderDone(id)),

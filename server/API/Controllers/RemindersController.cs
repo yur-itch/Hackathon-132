@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PlantCare.Api.Dtos;
+using PlantCare.Api.Models;
 using PlantCare.Api.Services.Interfaces;
 
 namespace PlantCare.Api.Controllers;
@@ -18,12 +19,20 @@ public sealed class RemindersController : ControllerBase
     }
 
     [HttpGet]
-    // dueOnly - получить тлько актуальные или просроченные напоминания, где дата уже все
-    // иначе все напоминания если false, по умолчанию flase
-    public async Task<IActionResult> GetReminders([FromQuery] bool dueOnly = false)
+    // dueOnly - получить только актуальные/просроченные напоминания (NextDueAt <= сейчас);
+    // при false — все, по умолчанию false.
+    public async Task<ActionResult<IReadOnlyCollection<ReminderDto>>> GetReminders([FromQuery] bool dueOnly = false)
     {
         var reminders = await _reminderService.GetMineAsync(this.GetOwnerId(), dueOnly);
-        return Ok(reminders);
+
+        var dtos = reminders.Select(r => new ReminderDto(
+            r.Id,
+            r.UserPlantId,
+            r.Type,
+            r.NextDueAt,
+            r.UserPlant?.Plant?.Name ?? r.UserPlant?.Nickname ?? "растение")).ToList();
+
+        return Ok(dtos);
     }
 
     [HttpPost]

@@ -101,6 +101,35 @@ export const userPlants = {
 };
 
 export const reminders = {
+  // Готовый список напоминаний из локальной коллекции — той же формы, что ReminderDto
+  // бэкенда (id, type, plantName, nextDueAt), чтобы страница не отличала гостя.
+  async list() {
+    const records = read(PLANTS_KEY) ?? [];
+    const items = [];
+
+    for (const record of records) {
+      if (record.nextWateringDate) {
+        items.push({
+          id: `${record.id}:watering`,
+          type: "Watering",
+          plantName: record.plantName,
+          nextDueAt: record.nextWateringDate,
+        });
+      }
+      if (record.nextRepottingDate) {
+        items.push({
+          id: `${record.id}:repotting`,
+          type: "Repotting",
+          plantName: record.plantName,
+          nextDueAt: record.nextRepottingDate,
+        });
+      }
+    }
+
+    items.sort((a, b) => new Date(a.nextDueAt) - new Date(b.nextDueAt));
+    return items;
+  },
+
   // Гостевой reminderId — "<id записи>:watering|repotting".
   // «Готово» сдвигает срок на интервал вперёд, как на бэке.
   async markDone(reminderId) {

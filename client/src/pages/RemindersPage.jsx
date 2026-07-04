@@ -8,33 +8,12 @@ import {
   isPushSupported,
 } from "../pushNotifications.js";
 
-function buildReminders(plants) {
-  return plants.flatMap((plant) => {
-    const items = [];
-
-    if (plant.nextWateringDate) {
-      items.push({
-        id: `${plant.id}-water`,
-        reminderId: plant.wateringReminderId,
-        title: "Полив",
-        plantName: plant.plantName,
-        date: plant.nextWateringDate,
-      });
-    }
-
-    if (plant.nextRepottingDate) {
-      items.push({
-        id: `${plant.id}-repot`,
-        reminderId: plant.repottingReminderId,
-        title: "Пересадка",
-        plantName: plant.plantName,
-        date: plant.nextRepottingDate,
-      });
-    }
-
-    return items;
-  });
-}
+// Тип напоминания с бэка/guestStore ("Watering"/…) → заголовок для UI.
+const REMINDER_TITLES = {
+  Watering: "Полив",
+  Repotting: "Пересадка",
+  Fertilizing: "Подкормка",
+};
 
 function PushToggle() {
   const [supported, setSupported] = useState(true);
@@ -93,9 +72,9 @@ export default function RemindersPage() {
   const [doneId, setDoneId] = useState(null);
 
   function load() {
-    api.userPlants
+    api.reminders
       .listMine()
-      .then((plants) => setReminders(buildReminders(plants)))
+      .then(setReminders)
       .catch(() => setError("Не удалось загрузить напоминания"));
   }
 
@@ -119,7 +98,7 @@ export default function RemindersPage() {
     <section>
       <div className="page-title">
         <h1>Напоминания</h1>
-        <p>Задачи строятся по датам, указанным в личном списке растений.</p>
+        <p>Задачи по уходу за растениями из вашего списка.</p>
       </div>
 
       {user ? (
@@ -132,29 +111,27 @@ export default function RemindersPage() {
 
       <div className="list">
         {reminders.map((reminder) => {
-          const dueDate = new Date(reminder.date);
+          const dueDate = new Date(reminder.nextDueAt);
           const isOverdue = dueDate <= new Date();
 
           return (
             <div className="list-item" key={reminder.id}>
               <div>
-                <h2>{reminder.title}</h2>
+                <h2>{REMINDER_TITLES[reminder.type] ?? "Уход"}</h2>
                 <p className="muted">{reminder.plantName}</p>
                 <p className={isOverdue ? "error" : "muted"}>
                   {isOverdue ? "Пора выполнить" : "Срок"}: {dueDate.toLocaleDateString()}
                 </p>
               </div>
 
-              {reminder.reminderId && (
-                <button
-                  className="button"
-                  onClick={() => markDone(reminder.reminderId)}
-                  disabled={doneId === reminder.reminderId || !isOverdue}
-                  title={isOverdue ? undefined : "Срок ещё не наступил"}
-                >
-                  {doneId === reminder.reminderId ? "Подождите…" : "Готово"}
-                </button>
-              )}
+              <button
+                className="button"
+                onClick={() => markDone(reminder.id)}
+                disabled={doneId === reminder.id || !isOverdue}
+                title={isOverdue ? undefined : "Срок ещё не наступил"}
+              >
+                {doneId === reminder.id ? "Подождите…" : "Готово"}
+              </button>
             </div>
           );
         })}
