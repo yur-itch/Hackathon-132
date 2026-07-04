@@ -11,6 +11,8 @@ using PlantCare.Api.Services.Interfaces;
 using PlantCare.Api.Services.PlantNet;
 using PlantCare.Api.Services.Recognition;
 using Scalar.AspNetCore;
+using PlantCare.Api.Hubs;
+
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
@@ -45,6 +47,8 @@ builder.Services.AddScoped<IRecommendationService, RecommendationService>();
 builder.Services.AddScoped<IFavoritesService, FavoritesService>();
 builder.Services.AddScoped<IPushService, PushService>();
 builder.Services.AddHostedService<ReminderBackgroundService>();
+
+builder.Services.AddSignalR();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -124,5 +128,6 @@ app.UseCors(DevCors);
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<ChatHub>("/hubs/chat");
 
 app.Run();

@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using PlantCare.Api.Dtos;
+using PlantCare.Api.Hubs;
 using PlantCare.Api.Models;
 using PlantCare.Api.Services.Interfaces;
 
@@ -12,10 +14,14 @@ namespace PlantCare.Api.Controllers;
 public sealed class ExchangeController : ControllerBase
 {
     private readonly IExchangeService _exchangeService;
+    private readonly IHubContext<ChatHub> _hubContext;
 
-    public ExchangeController(IExchangeService exchangeService)
+    public ExchangeController(
+        IExchangeService exchangeService,
+        IHubContext<ChatHub> hubContext)
     {
         _exchangeService = exchangeService;
+        _hubContext = hubContext;
     }
 
     [HttpGet("offers")]
@@ -73,7 +79,12 @@ public sealed class ExchangeController : ControllerBase
         }
 
         var messageDto = ToDto(message);
+
+        var groupName = ChatHub.GetGroupName(id.ToString(), messageDto.SenderId, messageDto.ReceiverId);
+        await _hubContext.Clients.Group(groupName).SendAsync("ReceiveMessage", messageDto);
+
         return Created($"/api/exchange/offers/{id}/messages/{messageDto.Id}", messageDto);
+
     }
 
     [HttpGet("offers/{id:guid}/messages")]
