@@ -33,10 +33,29 @@ export async function enablePushNotifications() {
   await navigator.serviceWorker.ready;
 
   const { publicKey } = await api.push.vapidPublicKey();
-  const subscription = await registration.pushManager.subscribe({
-    userVisibleOnly: true,
-    applicationServerKey: urlBase64ToUint8Array(publicKey),
-  });
+  if (!publicKey) {
+    throw new Error("На сервере не настроены VAPID-ключи — push отключён.");
+  }
+
+  // Если подписка уже есть — переиспользуем её, а не пытаемся подписаться заново
+  // (повторный subscribe() падает, если подписка с этим ключом уже существует).
+  let subscription = await registration.pushManager.getSubscription();
+  if (!subscription) {
+    try {
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(publicKey),
+      });
+    } catch {
+      // Отказ приходит от самого браузера на шаге регистрации в push-сервисе
+      // Google (FCM), а не от нашего бэкенда. Частая причина — нет доступа к
+      // серверам Google (нужен VPN) или push отключён в настройках браузера.
+      throw new Error(
+        "Браузер не смог зарегистрироваться в push-сервисе. Обычно причина внешняя: " +
+          "нет доступа к серверам Google (попробуйте VPN) или push отключён в браузере.",
+      );
+    }
+  }
 
   const raw = subscription.toJSON();
   await api.push.subscribe({
